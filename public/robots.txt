@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+# 網站地圖
+Sitemap: https://your-domain.railway.app/sitemap.xml
+
+# 禁止訪問管理員區域
+Disallow: /admin
+
+# 禁止訪問 API 端點
+Disallow: /api/
+
+# 允許訪問所有產品頁面
+Allow: /products
+Allow: /products/*
+
+# 允許訪問重要頁面
+Allow: /shipping
+Allow: /returns
+Allow: /sitemap 
