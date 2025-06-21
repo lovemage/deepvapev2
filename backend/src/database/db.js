@@ -15,6 +15,21 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // 設置外鍵約束
 db.run('PRAGMA foreign_keys = ON');
 
+// 測試數據庫連接
+const testConnection = () => {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT 1 as test', (err, row) => {
+      if (err) {
+        console.error('❌ 數據庫連接測試失敗:', err.message);
+        reject(err);
+      } else {
+        console.log('✅ 數據庫連接測試成功');
+        resolve(row);
+      }
+    });
+  });
+};
+
 // 封裝Promise方法
 const dbAsync = {
   get: (sql, params = []) => {
@@ -54,4 +69,4 @@ const dbAsync = {
   }
 };
 
-module.exports = { db, dbAsync };
+module.exports = { db, dbAsync, testConnection };

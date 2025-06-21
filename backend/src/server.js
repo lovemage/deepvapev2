@@ -3,6 +3,9 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+// 導入數據庫
+const { testConnection } = require('./database/db');
+
 // 導入路由
 const productsRouter = require('./routes/products');
 const cartRouter = require('./routes/cart');
@@ -161,8 +164,9 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌍 環境: ${NODE_ENV}`);
   
   // 測試數據庫連接
-  const { testConnection } = require('./database/db');
-  testConnection();
+  testConnection().catch(err => {
+    console.error('數據庫連接測試失敗:', err);
+  });
 });
 
 module.exports = app;
