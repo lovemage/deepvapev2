@@ -18,7 +18,9 @@ import {
   AlertTriangle,
   LogOut,
   Eye,
-  EyeOff
+  EyeOff,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 const Admin: React.FC = () => {
@@ -84,6 +86,12 @@ const Admin: React.FC = () => {
   });
   const [telegramTestResult, setTelegramTestResult] = useState<string>('');
 
+  // 圖片管理狀態
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
+
   useEffect(() => {
     if (isAuthenticated && token) {
       loadDashboardData();
@@ -92,6 +100,7 @@ const Admin: React.FC = () => {
       loadAnnouncements();
       loadSettings();
       loadAdmins();
+      loadImages();
     }
   }, [isAuthenticated, token]);
 
@@ -193,6 +202,37 @@ const Admin: React.FC = () => {
       setAdmins(response.data || []);
     } catch (error) {
       console.error('載入管理員列表失敗:', error);
+    }
+  };
+
+  const loadImages = async () => {
+    try {
+      const response = await adminAPI.getImages();
+      setImages(response.data);
+    } catch (error) {
+      console.error('載入圖片列表失敗:', error);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError('');
+    setUploadSuccess('');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await adminAPI.uploadImage(formData);
+      setUploadSuccess(`圖片上傳成功: ${response.data.filename}`);
+      loadImages(); // 重新加載列表
+    } catch (error: any) {
+      setUploadError(error.response?.data?.error || '上傳失敗');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -388,29 +428,18 @@ const Admin: React.FC = () => {
   };
 
   // Telegram Bot測試函數
-  const handleTestTelegramBot = async (e: React.FormEvent) => {
+  const handleTestTelegram = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTelegramTestResult('');
-    
-    if (!settingsForm.telegram_bot_token || !settingsForm.telegram_chat_id) {
-      setTelegramTestResult('❌ 請先設置Bot Token和Chat ID');
-      return;
-    }
-
+    setTelegramTestResult('發送中...');
     try {
-      const response = await adminAPI.testTelegramBot({
+      const response = await adminAPI.testTelegram({
         botToken: settingsForm.telegram_bot_token,
         chatId: settingsForm.telegram_chat_id,
         message: telegramTestForm.message
       });
-      
-      if (response.data.success) {
-        setTelegramTestResult(`✅ 測試成功！消息ID: ${response.data.messageId}`);
-      } else {
-        setTelegramTestResult(`❌ 測試失敗: ${response.data.error}`);
-      }
+      setTelegramTestResult(`✅ ${response.data.message}`);
     } catch (error: any) {
-      setTelegramTestResult(`❌ 測試失敗: ${error.response?.data?.error || error.message}`);
+      setTelegramTestResult(`❌ 發送失敗: ${error.response?.data?.error || error.message}`);
     }
   };
 
@@ -1304,57 +1333,58 @@ const Admin: React.FC = () => {
                   </div>
 
                   {/* Telegram Bot設置 */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Telegram Bot 設置</h3>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="telegram_bot_token">Bot Token</Label>
-                      <Input
-                        id="telegram_bot_token"
-                        type="password"
-                        value={settingsForm.telegram_bot_token}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, telegram_bot_token: e.target.value })}
-                        placeholder="請輸入Telegram Bot Token"
-                      />
-                    </div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Telegram Bot 設置</CardTitle>
+                      <CardDescription>配置Telegram通知機器人</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleUpdateSettings} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="telegram_bot_token">Bot Token</Label>
+                          <Input
+                            id="telegram_bot_token"
+                            name="telegram_bot_token"
+                            value={settingsForm.telegram_bot_token}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, telegram_bot_token: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="telegram_chat_id">Chat ID</Label>
+                          <Input
+                            id="telegram_chat_id"
+                            name="telegram_chat_id"
+                            value={settingsForm.telegram_chat_id}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, telegram_chat_id: e.target.value })}
+                          />
+                        </div>
+                        <Button type="submit">更新 Telegram 設置</Button>
+                      </form>
+                      
+                      <hr className="my-6" />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="telegram_chat_id">Chat ID</Label>
-                      <Input
-                        id="telegram_chat_id"
-                        value={settingsForm.telegram_chat_id}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, telegram_chat_id: e.target.value })}
-                        placeholder="請輸入Telegram Chat ID"
-                      />
-                    </div>
-
-                    {/* Telegram測試區域 */}
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h4 className="font-medium mb-2">測試 Telegram Bot</h4>
-                      <div className="space-y-2">
+                      <form onSubmit={handleTestTelegram} className="space-y-4">
+                        <Label htmlFor="telegram_test_message">測試消息</Label>
                         <Input
+                          id="telegram_test_message"
                           value={telegramTestForm.message}
-                          onChange={(e) => setTelegramTestForm({ ...telegramTestForm, message: e.target.value })}
-                          placeholder="測試消息"
+                          onChange={(e) => setTelegramTestForm({ message: e.target.value })}
                         />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleTestTelegramBot}
-                          className="w-full"
-                        >
-                          發送測試消息
-                        </Button>
+                        <Button type="submit">發送測試消息</Button>
                         {telegramTestResult && (
-                          <div className={`p-2 rounded text-sm ${
-                            telegramTestResult.includes('✅') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-                          }`}>
-                            {telegramTestResult}
-                          </div>
+                          <Alert>
+                            <AlertDescription>{telegramTestResult}</AlertDescription>
+                          </Alert>
                         )}
-                      </div>
-                    </div>
-                  </div>
+                      </form>
+                      <Alert variant="destructive" className="mt-4">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          請勿隨意更改，若需變更請洽技術人員
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
 
                   {/* Hero圖片設置 */}
                   <div className="space-y-2">

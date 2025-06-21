@@ -246,17 +246,16 @@ export const adminAPI = {
   deleteAdmin: (id: string) => api.delete(`/admin/admins/${id}`),
   
   // Telegram Bot測試
-  testTelegramBot: (data: { botToken: string; chatId: string; message: string }) => 
-    api.post('/admin/test-telegram', data),
+  testTelegram: (data: { botToken: string; chatId: string; message: string }) => 
+    api.post('/admin/telegram-test', data),
   
   // 圖片管理
-  getImages: () => api.get('/admin/images'),
-  
-  uploadImage: (formData: FormData) => api.post('/admin/upload-image', formData, {
+  uploadImage: (formData) => api.post('/admin/upload-image', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   }),
+  getImages: () => api.get('/admin/images')
 };
 
 // 系統設置相關API (公開)

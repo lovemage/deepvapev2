@@ -1,13 +1,45 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { dbAsync } = require('../database/db');
+const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { dbAsync } = require('../database/db');
-const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'vape-store-secret-key';
+
+// 圖片上傳目錄
+const uploadDir = path.join(__dirname, '../../../public/images');
+
+// 確保目錄存在
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Multer 配置
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // 防止文件名重複
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 1000 * 1024 }, // 1MB
+  fileFilter: (req, file, cb) => {
+    // 只接受圖片
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('只允許上傳圖片文件！'), false);
+    }
+    cb(null, true);
+  }
+});
 
 // 中間件：驗證JWT令牌
 const authenticateToken = (req, res, next) => {
@@ -26,74 +58,6 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
-
-// --- 圖片上傳設置 ---
-const imageUploadPath = path.join(__dirname, '../../../public/images');
-
-// 確保目錄存在
-if (!fs.existsSync(imageUploadPath)) {
-  fs.mkdirSync(imageUploadPath, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, imageUploadPath);
-  },
-  filename: function (req, file, cb) {
-    // 防止中文檔名亂碼
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-    cb(null, uniqueSuffix + '-' + originalName);
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 1000 * 1024 }, // 1000kb = 1MB
-  fileFilter: function (req, file, cb) {
-    // 只接受圖片類型
-    if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('檔案不是圖片格式！'), false);
-    }
-    cb(null, true);
-  }
-}).single('image');
-
-// 上傳圖片路由
-router.post('/upload-image', authenticateToken, (req, res) => {
-  upload(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: '圖片大小不能超過 1MB' });
-      }
-      return res.status(400).json({ error: `上傳失敗: ${err.message}` });
-    } else if (err) {
-      return res.status(400).json({ error: err.message });
-    }
-    
-    if (!req.file) {
-      return res.status(400).json({ error: '請選擇要上傳的圖片' });
-    }
-
-    res.json({ 
-      message: '圖片上傳成功',
-      filePath: `/images/${req.file.filename}` 
-    });
-  });
-});
-
-// 獲取圖片列表路由
-router.get('/images', authenticateToken, (req, res) => {
-  fs.readdir(imageUploadPath, (err, files) => {
-    if (err) {
-      console.error('讀取圖片目錄失敗:', err);
-      return res.status(500).json({ error: '無法讀取圖片列表' });
-    }
-    // 過濾掉非圖片或系統文件
-    const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file));
-    res.json(imageFiles);
-  });
-});
 
 // 管理員登錄
 router.post('/login', async (req, res) => {
@@ -207,6 +171,47 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
     console.error('獲取儀表板數據失敗:', error);
     res.status(500).json({ error: '獲取儀表板數據失敗' });
   }
+});
+
+// 圖片管理 - 獲取所有圖片
+router.get('/images', authenticateToken, (req, res) => {
+  fs.readdir(uploadDir, (err, files) => {
+    if (err) {
+      console.error('讀取圖片目錄失敗:', err);
+      return res.status(500).json({ error: '無法讀取圖片列表' });
+    }
+    // 過濾掉非圖片文件和隱藏文件
+    const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file));
+    res.json(imageFiles.reverse()); // 最近的在最前面
+  });
+});
+
+// 圖片管理 - 上傳圖片
+router.post('/upload-image', authenticateToken, (req, res) => {
+  const uploader = upload.single('image');
+  
+  uploader(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      // Multer 錯誤
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: '圖片大小不能超過 1MB' });
+      }
+      return res.status(400).json({ error: `上傳失敗: ${err.message}` });
+    } else if (err) {
+      // 其他錯誤
+      return res.status(400).json({ error: err.message });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: '請選擇要上傳的圖片' });
+    }
+
+    res.status(201).json({
+      message: '圖片上傳成功',
+      filename: req.file.filename,
+      path: `/images/${req.file.filename}`
+    });
+  });
 });
 
 // 產品管理 - 獲取所有產品
