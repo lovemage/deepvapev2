@@ -10,10 +10,18 @@ import {
   validateCoupon
 } from './mockData';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+// 動態設置 API 基礎 URL
+const getApiBaseUrl = () => {
+  if (import.meta.env.PROD) {
+    // 生產環境：使用相同域名的 API
+    return '/api';
+  } else {
+    // 開發環境：使用本地後端服務器
+    return 'http://localhost:3001/api';
+  }
+};
 
-// 檢測是否在生產環境或無法連接到API
-const isProduction = import.meta.env.PROD || window.location.hostname !== 'localhost';
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -55,35 +63,23 @@ export const productsAPI = {
     page?: number;
     limit?: number;
   }) => {
-    if (isProduction) {
-      // 使用mock數據
+    try {
+      return await api.get('/products', { params });
+    } catch (error) {
+      console.warn('API 不可用，使用模擬數據:', error);
       const result = searchProducts(params || {});
       return { data: result };
-    } else {
-      try {
-        return await api.get('/products', { params });
-      } catch (error) {
-        console.warn('API不可用，使用mock數據');
-        const result = searchProducts(params || {});
-        return { data: result };
-      }
     }
   },
   
   getProduct: async (id: string) => {
-    if (isProduction) {
+    try {
+      return await api.get(`/products/${id}`);
+    } catch (error) {
+      console.warn('API 不可用，使用模擬數據:', error);
       const product = getProductById(id);
       if (!product) throw new Error('產品不存在');
       return { data: product };
-    } else {
-      try {
-        return await api.get(`/products/${id}`);
-      } catch (error) {
-        console.warn('API不可用，使用mock數據');
-        const product = getProductById(id);
-        if (!product) throw new Error('產品不存在');
-        return { data: product };
-      }
     }
   },
   
@@ -94,20 +90,19 @@ export const productsAPI = {
   deleteProduct: (id: string) => api.delete(`/products/${id}`),
   
   getCategories: async () => {
-    if (isProduction) {
+    try {
+      return await api.get('/products/categories/list');
+    } catch (error) {
+      console.warn('API 不可用，使用模擬數據:', error);
       return { data: mockCategories };
-    } else {
-      try {
-        return await api.get('/products/categories/list');
-      } catch (error) {
-        console.warn('API不可用，使用mock數據');
-        return { data: mockCategories };
-      }
     }
   },
   
   getBrands: async (category?: string) => {
-    if (isProduction) {
+    try {
+      return await api.get('/products/brands/list', { params: { category } });
+    } catch (error) {
+      console.warn('API 不可用，使用模擬數據:', error);
       let brands = mockBrands;
       if (category) {
         // 根據分類過濾品牌
@@ -120,23 +115,6 @@ export const productsAPI = {
         }
       }
       return { data: brands };
-    } else {
-      try {
-        return await api.get('/products/brands/list', { params: { category } });
-      } catch (error) {
-        console.warn('API不可用，使用mock數據');
-        let brands = mockBrands;
-        if (category) {
-          if (category === 'host') {
-            brands = mockBrands.filter(b => ['JUUL', 'IQOS', 'Vaporesso'].includes(b.brand));
-          } else if (category === 'cartridge') {
-            brands = mockBrands.filter(b => ['JUUL', 'IQOS', 'Vaporesso'].includes(b.brand));
-          } else if (category === 'disposable') {
-            brands = mockBrands.filter(b => ['Puff Bar', 'Hyde', 'Elf Bar'].includes(b.brand));
-          }
-        }
-        return { data: brands };
-      }
     }
   },
 };
