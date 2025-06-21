@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, Truck, HeartHandshake, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [heroImageUrl, setHeroImageUrl] = useState('/images/itay-kabalo-b3sel60dv8a-unsplash.jpg');
+  const featuredRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // 檢查是否已經驗證過年齡
@@ -68,6 +69,10 @@ const Home: React.FC = () => {
       alert('很抱歉，本網站僅供18歲以上人士使用');
       window.location.href = 'https://www.google.com';
     }
+  };
+
+  const scrollToFeatured = () => {
+    featuredRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const features = [
@@ -126,8 +131,8 @@ const Home: React.FC = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white text-white hover:bg-white/10 shadow-lg"
-                onClick={() => navigate('/products')}
+                className="bg-white text-gray-900 hover:bg-gray-100 shadow-lg"
+                onClick={scrollToFeatured}
               >
                 了解更多
               </Button>
@@ -137,7 +142,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-16">
+      <section ref={featuredRef} className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">推薦商品</h2>

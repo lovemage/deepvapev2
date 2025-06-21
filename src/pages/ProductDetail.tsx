@@ -363,21 +363,21 @@ const ProductDetail: React.FC = () => {
                   <Truck className="h-5 w-5 text-purple-500" />
                   <div>
                     <div className="font-medium text-sm">免費配送</div>
-                    <div className="text-xs text-gray-500">滿千免運</div>
+                    <div className="text-xs text-gray-500">滿千免運 - 全台配送 安全無憂</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Shield className="h-5 w-5 text-purple-500" />
                   <div>
                     <div className="font-medium text-sm">品質保證</div>
-                    <div className="text-xs text-gray-500">正品保證</div>
+                    <div className="text-xs text-gray-500">正品保證 - 專業品質 正品保證</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RotateCcw className="h-5 w-5 text-purple-500" />
                   <div>
                     <div className="font-medium text-sm">退換貨</div>
-                    <div className="text-xs text-gray-500">7天無理由</div>
+                    <div className="text-xs text-gray-500">7天無理由 - 退換服務 七日無理由</div>
                   </div>
                 </div>
               </div>
