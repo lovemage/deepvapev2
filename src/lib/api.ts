@@ -248,6 +248,15 @@ export const adminAPI = {
   // Telegram Bot測試
   testTelegramBot: (data: { botToken: string; chatId: string; message: string }) => 
     api.post('/admin/test-telegram', data),
+  
+  // 圖片管理
+  getImages: () => api.get('/admin/images'),
+  
+  uploadImage: (formData: FormData) => api.post('/admin/upload-image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }),
 };
 
 // 系統設置相關API (公開)

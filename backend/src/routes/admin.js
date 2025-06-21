@@ -1,6 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 const { dbAsync } = require('../database/db');
 const router = express.Router();
 
@@ -23,6 +26,74 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+// --- 圖片上傳設置 ---
+const imageUploadPath = path.join(__dirname, '../../../public/images');
+
+// 確保目錄存在
+if (!fs.existsSync(imageUploadPath)) {
+  fs.mkdirSync(imageUploadPath, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, imageUploadPath);
+  },
+  filename: function (req, file, cb) {
+    // 防止中文檔名亂碼
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    cb(null, uniqueSuffix + '-' + originalName);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 1000 * 1024 }, // 1000kb = 1MB
+  fileFilter: function (req, file, cb) {
+    // 只接受圖片類型
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('檔案不是圖片格式！'), false);
+    }
+    cb(null, true);
+  }
+}).single('image');
+
+// 上傳圖片路由
+router.post('/upload-image', authenticateToken, (req, res) => {
+  upload(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: '圖片大小不能超過 1MB' });
+      }
+      return res.status(400).json({ error: `上傳失敗: ${err.message}` });
+    } else if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    
+    if (!req.file) {
+      return res.status(400).json({ error: '請選擇要上傳的圖片' });
+    }
+
+    res.json({ 
+      message: '圖片上傳成功',
+      filePath: `/images/${req.file.filename}` 
+    });
+  });
+});
+
+// 獲取圖片列表路由
+router.get('/images', authenticateToken, (req, res) => {
+  fs.readdir(imageUploadPath, (err, files) => {
+    if (err) {
+      console.error('讀取圖片目錄失敗:', err);
+      return res.status(500).json({ error: '無法讀取圖片列表' });
+    }
+    // 過濾掉非圖片或系統文件
+    const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file));
+    res.json(imageFiles);
+  });
+});
 
 // 管理員登錄
 router.post('/login', async (req, res) => {
