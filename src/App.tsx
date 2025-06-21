@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,16 @@ import Shipping from '@/pages/Shipping';
 import Returns from '@/pages/Returns';
 import Sitemap from '@/pages/Sitemap';
 import './App.css';
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 function App() {
   const { toast } = useToast();
@@ -39,6 +49,7 @@ function App() {
   
   return (
     <Router>
+      <ScrollToTop />
       <div className={cn(
         "min-h-screen bg-background font-sans antialiased",
         "flex flex-col"
