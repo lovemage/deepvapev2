@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, X } from 'lucide-react';
+import { ShoppingCart, Menu, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useCartStore } from '@/lib/store';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -39,9 +45,14 @@ const Header: React.FC = () => {
 
   const navigationItems = [
     { label: '首頁', path: '/' },
-    { label: '商品', path: '/products' },
     { label: '配送說明', path: '/shipping' },
     { label: '退換貨政策', path: '/returns' },
+  ];
+
+  const productCategories = [
+    { label: '主機 (Vape)', category: 'host' },
+    { label: '煙彈 (Pods)', category: 'cartridge' },
+    { label: '拋棄式 (Disposable)', category: 'disposable' },
   ];
 
   return (
@@ -112,6 +123,8 @@ const Header: React.FC = () => {
             z-index: 50;
             transform: translateX(100%);
             transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
           }
           
           .mobile-menu.open {
@@ -124,18 +137,33 @@ const Header: React.FC = () => {
         <div className="container flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <div 
-              className="deepvape-logo"
-              onClick={handleLogoClick}
-              title={logoClickCount > 0 ? `${logoClickCount}/5` : undefined}
-            >
+            <Link to="/" className="deepvape-logo" onClick={handleLogoClick}>
               DEEPVAPE
-            </div>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            {navigationItems.map((item) => (
+            <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
+              首頁
+            </Link>
+            <div className="relative group">
+              <Link to="/products" className="text-sm font-medium hover:text-primary transition-colors flex items-center">
+                商品 <ChevronDown className="ml-1 h-4 w-4" />
+              </Link>
+              <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 invisible group-hover:visible">
+                {productCategories.map((cat) => (
+                  <Link
+                    key={cat.category}
+                    to={`/products?category=${cat.category}`}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    {cat.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            {navigationItems.slice(1).map((item) => (
               <Link 
                 key={item.path}
                 to={item.path} 
@@ -149,12 +177,13 @@ const Header: React.FC = () => {
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
             <Link to="/cart">
-              <Button variant="ghost" size="sm" className="relative">
-                <ShoppingCart className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="relative">
+                <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs"
+                    size="sm"
                   >
                     {itemCount}
                   </Badge>
@@ -166,69 +195,78 @@ const Header: React.FC = () => {
             {/* Mobile menu button */}
             <Button 
               variant="ghost" 
-              size="sm" 
+              size="icon" 
               className="md:hidden"
               onClick={toggleMobileMenu}
             >
-              <Menu className="h-4 w-4" />
+              <Menu className="h-5 w-5" />
               <span className="sr-only">選單</span>
             </Button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Navigation Overlay */}
-        {isMobileMenuOpen && (
-          <div className="mobile-menu-overlay" onClick={closeMobileMenu} />
-        )}
-
-        {/* Mobile Navigation Menu */}
-        <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
-          <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-semibold text-lg">選單</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={closeMobileMenu}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {/* Navigation Items */}
-            <nav className="flex-1 p-4">
-              <div className="space-y-4">
-                {navigationItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className="block py-2 px-3 text-base font-medium hover:bg-gray-100 rounded-md transition-colors"
-                    onClick={closeMobileMenu}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </nav>
-          </div>
+      {/* Mobile Navigation */}
+      {isMobileMenuOpen && (
+        <div className="mobile-menu-overlay" onClick={closeMobileMenu} />
+      )}
+      <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="font-semibold text-lg">選單</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={closeMobileMenu}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-
-        {/* Desktop Mobile Navigation (fallback) */}
-        <div className="md:hidden border-t">
-          <nav className="container py-2 flex flex-wrap gap-4 text-sm">
-            {navigationItems.map((item) => (
-              <Link 
+        
+        {/* Navigation Items */}
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <div className="space-y-2">
+            <Link
+              to="/"
+              className="block py-2 px-3 text-base font-medium hover:bg-gray-100 rounded-md transition-colors"
+              onClick={closeMobileMenu}
+            >
+              首頁
+            </Link>
+            
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="products" className="border-b-0">
+                <AccordionTrigger className="py-2 px-3 text-base font-medium hover:bg-gray-100 rounded-md transition-colors">
+                  <Link to="/products" onClick={(e) => { e.stopPropagation(); closeMobileMenu(); }}>商品</Link>
+                </AccordionTrigger>
+                <AccordionContent className="pl-4">
+                  {productCategories.map((cat) => (
+                    <Link
+                      key={cat.category}
+                      to={`/products?category=${cat.category}`}
+                      className="block py-2 px-3 text-base font-medium hover:bg-gray-100 rounded-md transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      {cat.label}
+                    </Link>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+            
+            {navigationItems.slice(1).map((item) => (
+              <Link
                 key={item.path}
-                to={item.path} 
-                className="font-medium hover:text-primary transition-colors"
+                to={item.path}
+                className="block py-2 px-3 text-base font-medium hover:bg-gray-100 rounded-md transition-colors"
+                onClick={closeMobileMenu}
               >
                 {item.label}
               </Link>
             ))}
-          </nav>
-        </div>
-      </header>
+          </div>
+        </nav>
+      </div>
     </>
   );
 };

@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
@@ -17,13 +19,34 @@ import Sitemap from '@/pages/Sitemap';
 import './App.css';
 
 function App() {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // 監聽全局錯誤事件
+    const handleError = (event: ErrorEvent) => {
+      console.error("全局錯誤捕獲:", event.error);
+      toast({
+        title: "發生錯誤",
+        description: "系統出現未知錯誤，請稍後再試。",
+        variant: "destructive",
+      });
+    };
+    window.addEventListener("error", handleError);
+    return () => {
+      window.removeEventListener("error", handleError);
+    };
+  }, [toast]);
+  
   return (
-    <ErrorBoundary>
-      <Router>
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-          <AnnouncementBanner />
-          <Header />
-          <main className="flex-1">
+    <Router>
+      <div className={cn(
+        "min-h-screen bg-background font-sans antialiased",
+        "flex flex-col"
+      )}>
+        <Header />
+        <AnnouncementBanner />
+        <main className="flex-grow">
+          <ErrorBoundary>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<Products />} />
@@ -35,12 +58,12 @@ function App() {
               <Route path="/returns" element={<Returns />} />
               <Route path="/sitemap" element={<Sitemap />} />
             </Routes>
-          </main>
-          <Footer />
-          <Toaster />
-        </div>
-      </Router>
-    </ErrorBoundary>
+          </ErrorBoundary>
+        </main>
+        <Footer />
+        <Toaster />
+      </div>
+    </Router>
   );
 }
 
