@@ -40,9 +40,14 @@ railway up
 NODE_ENV=production
 PORT=3001
 JWT_SECRET=your-secure-jwt-secret-key
-TELEGRAM_BOT_TOKEN=7718317439:AAFFYFjqP6vu11y66tY8_5szGzuFXyvpB9A
-TELEGRAM_CHAT_ID=-1002666651546
+TELEGRAM_BOT_TOKEN=your-telegram-bot-token-here
+TELEGRAM_CHAT_ID=your-telegram-chat-id-here
 ```
+
+**重要提醒**：
+- 請將 `your-telegram-bot-token-here` 替換為您的實際 Telegram Bot Token
+- 請將 `your-telegram-chat-id-here` 替換為您的實際 Telegram Chat ID
+- 絕對不要在代碼倉庫中提交真實的 Token 和敏感資訊
 
 ### 4. 域名配置
 
