@@ -5,7 +5,9 @@ const router = express.Router();
 // 生成 XML sitemap
 router.get('/sitemap.xml', async (req, res) => {
   try {
-    const baseUrl = process.env.FRONTEND_URL || 'https://your-domain.railway.app';
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const baseUrl = `${protocol}://${host}`;
     
     // 靜態頁面
     const staticPages = [

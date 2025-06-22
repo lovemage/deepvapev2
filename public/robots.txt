@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # 網站地圖
-Sitemap: https://your-domain.railway.app/sitemap.xml
+Sitemap: /sitemap.xml
 
 # 禁止訪問管理員區域
 Disallow: /admin
