@@ -3,10 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle, XCircle, Clock, Shield, MessageCircle, Package, RefreshCw, CheckSquare } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 const Returns: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <SEO
+        title="退換貨政策 - DeepVape 電子煙商城"
+        description="DeepVape 電子煙商城退換貨政策，7天內品質問題可退換貨，電子煙主機提供3個月保固服務。詳細退換貨流程說明。"
+        keywords="退換貨政策,電子煙退貨,電子煙換貨,保固服務,退款流程,電子煙保固"
+        url="/returns"
+      />
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
         <div className="container mx-auto px-4">
@@ -33,8 +40,8 @@ const Returns: React.FC = () => {
               <div className="grid gap-4">
                 <div className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium">商品收到後 <Badge variant="outline">7 天內</Badge>，如有品質問題可申請退貨</p>
+                  <div className="font-medium">
+                    商品收到後 <Badge variant="outline">7 天內</Badge>，如有品質問題可申請退貨
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

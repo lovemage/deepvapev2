@@ -52,10 +52,19 @@ const Cart: React.FC = () => {
 
   const loadCart = async () => {
     if (!sessionId) return;
-    
+
     try {
       setLoading(true);
       const response = await cartAPI.getCart(sessionId);
+      console.log('購物車數據載入:', response.data);
+      console.log('購物車商品:', response.data.items);
+      response.data.items.forEach((item: any, index: number) => {
+        console.log(`商品 ${index}:`, {
+          id: item.id,
+          name: item.name,
+          idType: typeof item.id
+        });
+      });
       setItems(response.data.items);
       setTotalAmount(response.data.totalAmount);
       setItemCount(response.data.itemCount);
@@ -67,12 +76,24 @@ const Cart: React.FC = () => {
   };
 
   const updateQuantity = async (itemId: number, newQuantity: number) => {
+    console.log('updateQuantity 被調用，itemId:', itemId, '類型:', typeof itemId, 'newQuantity:', newQuantity);
+
     if (newQuantity < 1) return;
+    if (!itemId) {
+      console.error('無效的商品ID:', itemId);
+      toast({
+        title: "錯誤",
+        description: "無效的商品ID",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
-      await cartAPI.updateCartItem(itemId.toString(), { quantity: newQuantity });
+      console.log('正在更新商品數量，ID:', String(itemId), '新數量:', newQuantity);
+      await cartAPI.updateCartItem(String(itemId), { quantity: newQuantity });
       await loadCart();
-      
+
       toast({
         title: "數量已更新",
         description: "商品數量已成功更新",
@@ -88,10 +109,23 @@ const Cart: React.FC = () => {
   };
 
   const removeItem = async (itemId: number) => {
+    console.log('removeItem 被調用，itemId:', itemId, '類型:', typeof itemId);
+
+    if (!itemId) {
+      console.error('無效的商品ID:', itemId);
+      toast({
+        title: "錯誤",
+        description: "無效的商品ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      await cartAPI.removeCartItem(itemId.toString());
+      console.log('正在刪除商品，ID:', String(itemId));
+      await cartAPI.removeCartItem(String(itemId));
       await loadCart();
-      
+
       toast({
         title: "商品已移除",
         description: "商品已從購物車中移除",

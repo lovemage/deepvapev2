@@ -7,7 +7,12 @@ export function cn(...inputs: ClassValue[]) {
 
 // 格式化價格
 export function formatPrice(price: number): string {
-  return `$${price.toFixed(0)}`
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'TWD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
 }
 
 // 格式化日期

@@ -10,6 +10,7 @@ import { Product, ProductVariant } from '@/lib/store';
 import { formatPrice, getCategoryName, getStockStatus, getImageUrl } from '@/lib/utils';
 import { useCartStore } from '@/lib/store';
 import { cartAPI, productsAPI } from '@/lib/api';
+import SEO, { createProductStructuredData, createBreadcrumbStructuredData } from '@/components/SEO';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -155,8 +156,28 @@ const ProductDetail: React.FC = () => {
     );
   }
 
+  // 生成麵包屑導航
+  const breadcrumbs = [
+    { name: '首頁', url: '/' },
+    { name: '商品列表', url: '/products' },
+    { name: getCategoryName(product.category), url: `/products?category=${product.category}` },
+    { name: product.name, url: `/products/${product.id}` }
+  ];
+
   return (
     <div className="container mx-auto px-4 py-8">
+      <SEO
+        title={`${product.name} - ${product.brand} ${getCategoryName(product.category)}`}
+        description={product.description}
+        keywords={`${product.name},${product.brand},${getCategoryName(product.category)},電子煙,${product.category === 'host' ? '電子煙主機' : product.category === 'cartridge' ? '煙彈' : '拋棄式電子煙'}`}
+        image={getImageUrl(product.image_url)}
+        url={`/products/${product.id}`}
+        type="product"
+        structuredData={{
+          ...createProductStructuredData(product),
+          breadcrumb: createBreadcrumbStructuredData(breadcrumbs)
+        }}
+      />
       {/* Breadcrumb */}
       <div className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
         <Button
@@ -324,60 +345,37 @@ const ProductDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="space-y-3">
-            <Button
-              onClick={addToCart}
-              disabled={isAddingToCart || getCurrentStock() === 0}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 h-12"
-              size="lg"
-            >
-              {isAddingToCart ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>加入中...</span>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <ShoppingCart className="h-5 w-5" />
-                  <span>加入購物車</span>
-                </div>
-              )}
-            </Button>
-            
-            <Button
-              variant="outline"
-              className="w-full h-12"
-              disabled={getCurrentStock() === 0}
-            >
-              <Heart className="h-5 w-5 mr-2" />
-              加入收藏
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <Button size="lg" className="w-full" onClick={addToCart} disabled={isAddingToCart || stockStatus.status === 'out-of-stock'}>
+              <ShoppingCart className="h-5 w-5 mr-2" />
+              {isAddingToCart ? '加入中...' : '加入購物車'}
             </Button>
           </div>
 
-          {/* Features */}
-          <Card>
+          {/* Service Guarantees */}
+          <Card className="mt-6 border-dashed">
             <CardContent className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center space-x-2">
                   <Truck className="h-5 w-5 text-purple-500" />
                   <div>
                     <div className="font-medium text-sm">免費配送</div>
-                    <div className="text-xs text-gray-500">滿千免運 - 全台配送 安全無憂</div>
+                    <div className="text-xs text-gray-500">全台配送 安全無憂</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Shield className="h-5 w-5 text-purple-500" />
                   <div>
                     <div className="font-medium text-sm">品質保證</div>
-                    <div className="text-xs text-gray-500">正品保證 - 專業品質 正品保證</div>
+                    <div className="text-xs text-gray-500">專業品質 正品保證</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RotateCcw className="h-5 w-5 text-purple-500" />
                   <div>
                     <div className="font-medium text-sm">退換貨</div>
-                    <div className="text-xs text-gray-500">7天無理由 - 退換服務 七日無理由</div>
+                    <div className="text-xs text-gray-500">退換服務 七日無理由</div>
                   </div>
                 </div>
               </div>

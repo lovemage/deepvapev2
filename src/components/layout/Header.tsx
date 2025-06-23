@@ -16,23 +16,23 @@ const Header: React.FC = () => {
   const { itemCount } = useCartStore();
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const clickTimer = React.useRef<NodeJS.Timeout | null>(null);
+
+  React.useEffect(() => {
+    if (logoClickCount >= 5) {
+      navigate('/admin');
+      setLogoClickCount(0);
+    }
+  }, [logoClickCount, navigate]);
 
   const handleLogoClick = () => {
-    setLogoClickCount(prev => {
-      const newCount = prev + 1;
-      if (newCount >= 5) {
-        navigate('/admin');
-        setLogoClickCount(0);
-        return 0;
-      }
-      
-      // 3秒後重置計數
-      setTimeout(() => {
-        setLogoClickCount(0);
-      }, 3000);
-      
-      return newCount;
-    });
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
+    }
+    setLogoClickCount(prev => prev + 1);
+    clickTimer.current = setTimeout(() => {
+      setLogoClickCount(0);
+    }, 2000); // 2秒內未連續點擊則重置
   };
 
   const toggleMobileMenu = () => {
@@ -137,9 +137,9 @@ const Header: React.FC = () => {
         <div className="container flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <Link to="/" className="deepvape-logo" onClick={handleLogoClick}>
+            <div className="deepvape-logo" onClick={handleLogoClick}>
               DEEPVAPE
-            </Link>
+            </div>
           </div>
 
           {/* Desktop Navigation */}

@@ -23,21 +23,21 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // 防止文件名重複
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    // 使用原始文件名
+    cb(null, Buffer.from(file.originalname, 'latin1').toString('utf8'));
   }
 });
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1000 * 1024 }, // 1MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB 大小限制
   fileFilter: (req, file, cb) => {
-    // 只接受圖片
-    if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('只允許上傳圖片文件！'), false);
+    // 只接受圖片類型
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('不支援的檔案類型！'), false);
     }
-    cb(null, true);
   }
 });
 
@@ -114,7 +114,7 @@ router.get('/verify', authenticateToken, (req, res) => {
 });
 
 // 管理員儀表板數據
-router.get('/dashboard', authenticateToken, async (req, res) => {
+router.get('/dashboard-stats', authenticateToken, async (req, res) => {
   try {
     // 統計數據
     const stats = {
@@ -173,45 +173,80 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
   }
 });
 
-// 圖片管理 - 獲取所有圖片
+// 圖片管理 - 上傳圖片
+router.post('/upload-image', authenticateToken, upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: '沒有上傳檔案' });
+  }
+  res.json({ 
+    success: true, 
+    message: '圖片上傳成功', 
+    filePath: `/images/${req.file.filename}` 
+  });
+}, (error, req, res, next) => {
+  // 處理 multer 的錯誤
+  if (error instanceof multer.MulterError) {
+    return res.status(400).json({ success: false, message: error.message });
+  } else if (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+  next();
+});
+
+// 獲取圖片列表路由
 router.get('/images', authenticateToken, (req, res) => {
-  fs.readdir(uploadDir, (err, files) => {
+  const imagesDir = path.join(__dirname, '../../../public/images');
+  fs.readdir(imagesDir, (err, files) => {
     if (err) {
-      console.error('讀取圖片目錄失敗:', err);
-      return res.status(500).json({ error: '無法讀取圖片列表' });
+      console.error('無法讀取圖片目錄:', err);
+      // 如果資料夾不存在，返回空陣列
+      if (err.code === 'ENOENT') {
+        return res.json({ success: true, images: [] });
+      }
+      return res.status(500).json({ success: false, message: '無法讀取圖片目錄' });
     }
-    // 過濾掉非圖片文件和隱藏文件
-    const imageFiles = files.filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file));
-    res.json(imageFiles.reverse()); // 最近的在最前面
+
+    // 過濾掉非圖片或系統文件 (例如 .DS_Store)
+    const imageFiles = files.filter(file => {
+      const ext = path.extname(file).toLowerCase();
+      return ['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(ext);
+    }).map(file => ({
+      name: file,
+      path: `/images/${file}`
+    }));
+
+    res.json({ success: true, images: imageFiles.reverse() }); // 讓最新的在最前面
   });
 });
 
-// 圖片管理 - 上傳圖片
-router.post('/upload-image', authenticateToken, (req, res) => {
-  const uploader = upload.single('image');
-  
-  uploader(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      // Multer 錯誤
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: '圖片大小不能超過 1MB' });
-      }
-      return res.status(400).json({ error: `上傳失敗: ${err.message}` });
-    } else if (err) {
-      // 其他錯誤
-      return res.status(400).json({ error: err.message });
+// 新增：修改當前登入管理員的密碼
+router.patch('/change-password', authenticateToken, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const adminId = req.user.id;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: '目前密碼和新密碼為必填項' });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ error: '請選擇要上傳的圖片' });
-    }
+    try {
+        const admin = await dbAsync.get(`SELECT * FROM admins WHERE id = ?`, [adminId]);
+        if (!admin) {
+            return res.status(404).json({ message: "找不到管理員" });
+        }
 
-    res.status(201).json({
-      message: '圖片上傳成功',
-      filename: req.file.filename,
-      path: `/images/${req.file.filename}`
-    });
-  });
+        const isMatch = await bcrypt.compare(currentPassword, admin.password_hash);
+        if (!isMatch) {
+            return res.status(400).json({ message: "目前密碼不正確" });
+        }
+
+        const hash = await bcrypt.hash(newPassword, 10);
+        await dbAsync.run(`UPDATE admins SET password_hash = ? WHERE id = ?`, [hash, adminId]);
+        
+        res.json({ message: "密碼更新成功" });
+    } catch (err) {
+        console.error("更新密碼時發生錯誤:", err);
+        res.status(500).json({ message: "更新密碼失敗", error: err.message });
+    }
 });
 
 // 產品管理 - 獲取所有產品

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import SEO from '@/components/SEO';
 
 interface SitemapData {
   staticPages: Array<{
@@ -160,6 +161,12 @@ const Sitemap: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <SEO
+        title="網站地圖 - DeepVape 電子煙商城"
+        description="瀏覽 DeepVape 電子煙商城的完整網站地圖，快速找到所有產品頁面、品牌頁面和資訊頁面。包含產品分類統計和搜索功能。"
+        keywords="網站地圖,sitemap,電子煙產品導航,品牌頁面,產品分類,網站導航"
+        url="/sitemap"
+      />
       {/* 頁面標題 */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">網站地圖</h1>

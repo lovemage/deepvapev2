@@ -127,7 +127,7 @@ interface CartState {
   addItem: (item: CartItem) => void;
   updateItem: (id: number, quantity: number) => void;
   removeItem: (id: number) => void;
-  clearCart: () => void;
+  clearCart: () => Promise<void>;
 }
 
 export const useCartStore = create<CartState>()(
@@ -170,7 +170,19 @@ export const useCartStore = create<CartState>()(
         const updatedItems = items.filter((item) => item.id !== id);
         set({ items: updatedItems });
       },
-      clearCart: () => set({ items: [], totalAmount: 0, itemCount: 0, appliedCoupon: undefined }),
+      clearCart: async () => {
+        const sessionId = get().sessionId;
+        try {
+          // 調用後端 API 清空購物車
+          const { cartAPI } = await import('./api');
+          await cartAPI.clearCart(sessionId);
+          console.log('後端購物車已清空');
+        } catch (error) {
+          console.error('清空後端購物車失敗:', error);
+        }
+        // 清空本地狀態
+        set({ items: [], totalAmount: 0, itemCount: 0, appliedCoupon: undefined });
+      },
     }),
     {
       name: 'cart-storage',

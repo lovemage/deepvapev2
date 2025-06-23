@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCartStore } from '@/lib/store';
 import { formatPrice } from '@/lib/utils';
 import { settingsAPI, ordersAPI } from '@/lib/api';
+import Captcha from '@/components/Captcha';
 
 interface CustomerInfo {
   name: string;
@@ -23,7 +24,7 @@ const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { items, totalAmount, appliedCoupon, clearCart } = useCartStore();
-  
+
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: '',
     phone: '',
@@ -31,10 +32,11 @@ const Checkout: React.FC = () => {
     storeNumber: '',
     storeName: ''
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [orderId, setOrderId] = useState('');
+  const [captchaValid, setCaptchaValid] = useState(false);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(1000);
 
   useEffect(() => {
@@ -85,7 +87,7 @@ const Checkout: React.FC = () => {
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // 驗證必填欄位
     if (!customerInfo.name || !customerInfo.phone) {
       toast({
@@ -100,6 +102,16 @@ const Checkout: React.FC = () => {
       toast({
         title: "請填寫取貨門市",
         description: "請填寫取件店號或取件店名",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // 驗證驗證碼
+    if (!captchaValid) {
+      toast({
+        title: "請完成驗證",
+        description: "請正確輸入驗證碼",
         variant: "destructive",
       });
       return;
@@ -121,23 +133,26 @@ const Checkout: React.FC = () => {
 
       // 提交訂單並發送Telegram通知
       const result = await submitOrderWithNotification(orderData);
-      
+
       // 清空購物車
-      clearCart();
-      
+      await clearCart();
+
       // 設置訂單完成狀態
       setOrderId(newOrderId);
       setOrderCompleted(true);
-      
-      if (result.telegramSent) {
+
+      // 根據後端返回的結果顯示通知
+      if (result && result.telegramSent !== false) {
         toast({
-          title: "訂單提交成功！",
-          description: "您的訂單已成功提交，我們會盡快處理",
+          title: "✅ 訂單提交成功！",
+          description: "您的訂單已成功提交，系統通知已發送，我們會盡快處理",
+          duration: 5000,
         });
       } else {
         toast({
-          title: "訂單提交成功！",
-          description: "您的訂單已成功提交，通知系統暫時異常，但訂單已記錄",
+          title: "✅ 訂單提交成功！",
+          description: "您的訂單已成功提交並記錄，通知系統暫時異常，但不影響訂單處理",
+          duration: 5000,
         });
       }
     } catch (error) {
@@ -297,11 +312,19 @@ const Checkout: React.FC = () => {
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full" 
+                <Separator />
+
+                {/* 驗證碼 */}
+                <Captcha
+                  onVerify={setCaptchaValid}
+                  className="mb-4"
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full"
                   size="lg"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !captchaValid}
                 >
                   {isSubmitting ? '提交中...' : '確認訂購'}
                 </Button>

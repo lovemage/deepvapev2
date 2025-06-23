@@ -1,9 +1,16 @@
 import React from 'react';
 import { ShoppingCart, CreditCard, Truck, AlertCircle } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 const Shipping: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      <SEO
+        title="配送說明 - DeepVape 電子煙商城"
+        description="了解 DeepVape 電子煙商城的配送流程，簡單三步驟完成購物。支援7-11、全家便利商店取貨，3-5個工作天快速配送。"
+        keywords="配送說明,電子煙配送,便利商店取貨,7-11取貨,全家取貨,電子煙購物流程"
+        url="/shipping"
+      />
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}

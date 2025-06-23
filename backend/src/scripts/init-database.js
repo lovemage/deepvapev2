@@ -104,6 +104,44 @@ db.serialize(() => {
     ('hero_image_url', '/images/itay-kabalo-b3sel60dv8a-unsplash.jpg')
   `);
 
+  // 訂單表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_number TEXT,
+      customer_name TEXT NOT NULL,
+      customer_phone TEXT NOT NULL,
+      customer_line_id TEXT,
+      shipping_method TEXT,
+      shipping_store_name TEXT,
+      shipping_store_number TEXT,
+      subtotal DECIMAL(10, 2) NOT NULL,
+      shipping_fee DECIMAL(10, 2) NOT NULL,
+      discount DECIMAL(10, 2) DEFAULT 0,
+      total_amount DECIMAL(10, 2) NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      coupon_code TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 訂單項目表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS order_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER NOT NULL,
+      product_id INTEGER NOT NULL,
+      variant_id INTEGER,
+      quantity INTEGER NOT NULL,
+      price DECIMAL(10, 2) NOT NULL,
+      product_name TEXT NOT NULL,
+      variant_value TEXT,
+      FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
+      FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE SET NULL,
+      FOREIGN KEY (variant_id) REFERENCES product_variants (id) ON DELETE SET NULL
+    )
+  `);
+
   console.log('✅ 數據庫表創建完成！');
 });
 

@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:frontend && npm run build:backend",
-    "build:frontend": "tsc -b && vite build",
+    "build:frontend": "tsc -b && vite build && npm run copy-sitemap",
     "build:backend": "cd backend && npm install --production",
+    "copy-sitemap": "cp public/sitemap.xml dist/sitemap.xml",
     "start": "cd backend && npm start",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -53,9 +54,11 @@
     "react": "^18.3.1",
     "react-day-picker": "^9.4.2",
     "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
     "react-hook-form": "^7.54.0",
     "react-resizable-panels": "^2.1.7",
     "react-router-dom": "^6.29.0",
+    "react-simple-captcha": "^9.3.1",
     "recharts": "^2.15.0",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.4",
@@ -85,10 +88,10 @@
     "vite": "^6.0.3"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.28.1",
-    "@rollup/rollup-linux-arm64-gnu": "^4.28.1",
-    "@rollup/rollup-darwin-x64": "^4.28.1",
     "@rollup/rollup-darwin-arm64": "^4.28.1",
+    "@rollup/rollup-darwin-x64": "^4.28.1",
+    "@rollup/rollup-linux-arm64-gnu": "^4.28.1",
+    "@rollup/rollup-linux-x64-gnu": "^4.28.1",
     "@rollup/rollup-win32-x64-msvc": "^4.28.1"
   },
   "engines": {

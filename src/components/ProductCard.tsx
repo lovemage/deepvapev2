@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, Heart, Star } from 'lucide-react';
+import { Eye, Star } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,13 +47,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               className="h-8 w-8 rounded-full bg-white/90 hover:bg-white"
             >
               <Eye className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="secondary"
-              className="h-8 w-8 rounded-full bg-white/90 hover:bg-white"
-            >
-              <Heart className="h-4 w-4" />
             </Button>
           </div>
 

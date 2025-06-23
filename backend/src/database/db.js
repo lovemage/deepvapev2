@@ -62,7 +62,7 @@ const dbAsync = {
         if (err) {
           reject(err);
         } else {
-          resolve({ id: this.lastID, changes: this.changes });
+          resolve(this);
         }
       });
     });

@@ -184,25 +184,25 @@ export const adminAPI = {
   
   createProduct: (data: any) => api.post('/admin/products', data),
   
-  updateProduct: (id: string, data: any) => 
+  updateProduct: (id: number, data: any) => 
     api.put(`/admin/products/${id}`, data),
   
-  deleteProduct: (id: string) => api.delete(`/admin/products/${id}`),
+  deleteProduct: (id: number) => api.delete(`/admin/products/${id}`),
   
   updateBatchStock: (data: { updates: Array<{ id: number; stock: number }> }) => 
     api.put('/admin/products/batch-stock', data),
   
   // 產品變體管理
-  getProductVariants: (productId: string) => 
+  getProductVariants: (productId: number) => 
     api.get(`/admin/products/${productId}/variants`),
   
-  createProductVariant: (productId: string, data: any) => 
+  createProductVariant: (productId: number, data: any) => 
     api.post(`/admin/products/${productId}/variants`, data),
   
-  updateProductVariant: (variantId: string, data: any) => 
+  updateProductVariant: (variantId: number, data: any) => 
     api.put(`/admin/variants/${variantId}`, data),
   
-  deleteProductVariant: (variantId: string) => 
+  deleteProductVariant: (variantId: number) => 
     api.delete(`/admin/variants/${variantId}`),
   
   // 優惠券管理
@@ -210,20 +210,20 @@ export const adminAPI = {
   
   createCoupon: (data: any) => api.post('/admin/coupons', data),
   
-  updateCoupon: (id: string, data: any) => 
+  updateCoupon: (id: number, data: any) => 
     api.put(`/admin/coupons/${id}`, data),
   
-  deleteCoupon: (id: string) => api.delete(`/admin/coupons/${id}`),
+  deleteCoupon: (id: number) => api.delete(`/admin/coupons/${id}`),
   
   // 公告管理
   getAnnouncements: () => api.get('/admin/announcements'),
   
   createAnnouncement: (data: any) => api.post('/admin/announcements', data),
   
-  updateAnnouncement: (id: string, data: any) => 
+  updateAnnouncement: (id: number, data: any) => 
     api.put(`/admin/announcements/${id}`, data),
   
-  deleteAnnouncement: (id: string) => api.delete(`/admin/announcements/${id}`),
+  deleteAnnouncement: (id: number) => api.delete(`/admin/announcements/${id}`),
   
   // 系統設置管理
   getSettings: () => api.get('/admin/settings'),
@@ -240,10 +240,13 @@ export const adminAPI = {
   createAdmin: (data: { username: string; password: string }) => 
     api.post('/admin/admins', data),
   
-  updateAdminPassword: (id: string, data: { newPassword: string }) => 
+  updateAdminPassword: (id: number, data: { newPassword: string }) => 
     api.put(`/admin/admins/${id}/password`, data),
   
-  deleteAdmin: (id: string) => api.delete(`/admin/admins/${id}`),
+  deleteAdmin: (id: number) => api.delete(`/admin/admins/${id}`),
+  
+  // 新增：修改密碼
+  changePassword: (data: any) => api.patch('/admin/change-password', data),
   
   // Telegram Bot測試
   testTelegram: (data: { botToken: string; chatId: string; message: string }) => 
@@ -267,5 +270,48 @@ export const settingsAPI = {
 export const ordersAPI = {
   submitOrder: (orderData: any) => api.post('/orders/submit', { orderData }),
 };
+
+export async function getDashboardStats() {
+  try {
+    const response = await api.get('/admin/dashboard-stats');
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || '無法獲取儀表板數據');
+  }
+}
+
+export async function uploadImage(file: File) {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const response = await api.post('/admin/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || '圖片上傳失敗');
+  }
+}
+
+export async function getImages() {
+  try {
+    const response = await api.get('/admin/images');
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || '無法獲取圖片列表');
+  }
+}
+
+// 設置相關
+export async function getSettings() {
+  try {
+    // ... existing code ...
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || '無法獲取設置');
+  }
+}
 
 export default api;

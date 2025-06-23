@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/sheet';
 import { Checkbox } from '@/components/ui/checkbox';
 import ProductCard from '@/components/ProductCard';
+import SEO, { createBreadcrumbStructuredData } from '@/components/SEO';
 import { useProductStore } from '@/lib/store';
 import { productsAPI } from '@/lib/api';
 import { getCategoryName, debounce } from '@/lib/utils';
@@ -253,8 +254,57 @@ const Products: React.FC = () => {
     </div>
   );
 
+  // 生成動態SEO內容
+  const generateSEOContent = () => {
+    let title = '商品列表';
+    let description = '瀏覽 DeepVape 電子煙商城的所有商品';
+    let keywords = '電子煙,電子煙商品,電子煙購買';
+
+    if (selectedCategory) {
+      const categoryName = getCategoryName(selectedCategory);
+      title = `${categoryName} - 商品列表`;
+      description = `瀏覽 DeepVape 的${categoryName}商品，提供優質的電子煙產品`;
+      keywords += `,${categoryName}`;
+    }
+
+    if (selectedBrand) {
+      title = selectedCategory
+        ? `${selectedBrand} ${getCategoryName(selectedCategory)} - 商品列表`
+        : `${selectedBrand} 商品 - 商品列表`;
+      description = `瀏覽 ${selectedBrand} 品牌的電子煙產品，正品保證`;
+      keywords += `,${selectedBrand}`;
+    }
+
+    if (searchQuery) {
+      title = `"${searchQuery}" 搜索結果 - 商品列表`;
+      description = `搜索 "${searchQuery}" 的相關電子煙產品`;
+    }
+
+    return { title, description, keywords };
+  };
+
+  const seoContent = generateSEOContent();
+  const breadcrumbs = [
+    { name: '首頁', url: '/' },
+    { name: '商品列表', url: '/products' }
+  ];
+
+  if (selectedCategory) {
+    breadcrumbs.push({
+      name: getCategoryName(selectedCategory),
+      url: `/products?category=${selectedCategory}`
+    });
+  }
+
   return (
     <div className="container mx-auto px-4 py-6">
+      <SEO
+        title={seoContent.title}
+        description={seoContent.description}
+        keywords={seoContent.keywords}
+        url={`/products${selectedCategory ? `?category=${selectedCategory}` : ''}${selectedBrand ? `${selectedCategory ? '&' : '?'}brand=${selectedBrand}` : ''}`}
+        structuredData={createBreadcrumbStructuredData(breadcrumbs)}
+      />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
         <div>
@@ -340,7 +390,7 @@ const Products: React.FC = () => {
         {/* Products Grid */}
         <div className="flex-1">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(12)].map((_, index) => (
                 <div key={index} className="animate-pulse">
                   <div className="bg-gray-200 h-64 rounded-lg"></div>
@@ -371,7 +421,7 @@ const Products: React.FC = () => {
             <>
               <div className={
                 viewMode === 'grid' 
-                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+                  ? 'grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6'
                   : 'space-y-4'
               }>
                 {sortedProducts.map((product) => (

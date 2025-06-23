@@ -51,7 +51,7 @@ app.use('/api/announcements', announcementsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/orders', ordersRouter);
-app.use('/', sitemapRouter);
+app.use('/api', sitemapRouter);
 
 // robots.txt 路由
 app.get('/robots.txt', (req, res) => {

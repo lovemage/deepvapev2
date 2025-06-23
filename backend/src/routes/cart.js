@@ -9,16 +9,21 @@ router.get('/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     
     const cartItems = await dbAsync.all(`
-      SELECT 
-        ci.*,
+      SELECT
+        ci.id,
+        ci.quantity,
+        ci.session_id,
+        ci.variant_id,
+        p.id as product_id,
         p.name,
-        p.price,
+        p.price as base_price,
         p.image_url,
         p.brand,
         p.category,
         pv.variant_type,
         pv.variant_value,
         pv.price_modifier,
+        (p.price + COALESCE(pv.price_modifier, 0)) as price,
         (p.price + COALESCE(pv.price_modifier, 0)) * ci.quantity as total_price
       FROM cart_items ci
       JOIN products p ON ci.product_id = p.id

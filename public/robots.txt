@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # 網站地圖
-Sitemap: /sitemap.xml
+Sitemap: https://deepvape.org/sitemap.xml
 
 # 禁止訪問管理員區域
 Disallow: /admin
@@ -17,4 +17,11 @@ Allow: /products/*
 # 允許訪問重要頁面
 Allow: /shipping
 Allow: /returns
-Allow: /sitemap 
+Allow: /sitemap
+
+# 允許訪問購物車和結帳頁面
+Allow: /cart
+Allow: /checkout
+
+# 爬蟲延遲設定 (秒)
+Crawl-delay: 1
