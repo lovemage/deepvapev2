@@ -97,11 +97,13 @@ db.serialize(() => {
 
   // 插入默認系統設置
   db.run(`
-    INSERT OR IGNORE INTO system_settings (key, value) VALUES 
+    INSERT OR IGNORE INTO system_settings (key, value) VALUES
     ('free_shipping_threshold', '1000'),
     ('telegram_bot_token', ''),
     ('telegram_chat_id', ''),
-    ('hero_image_url', '/images/itay-kabalo-b3sel60dv8a-unsplash.jpg')
+    ('hero_image_url', '/images/itay-kabalo-b3sel60dv8a-unsplash.jpg'),
+    ('show_product_reviews', 'true'),
+    ('show_product_preview', 'true')
   `);
 
   // 訂單表
