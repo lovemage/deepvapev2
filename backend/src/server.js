@@ -168,6 +168,23 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.log('🔧 初始化數據庫表結構...');
     require('./scripts/init-database.js');
     console.log('✅ 數據庫初始化完成');
+
+    // 檢查是否需要恢復產品數據
+    const db = require('./database/db');
+    db.get('SELECT COUNT(*) as count FROM products', (err, row) => {
+      if (err) {
+        console.error('❌ 檢查產品數據失敗:', err);
+      } else if (row.count === 0) {
+        console.log('📦 檢測到空的產品表，開始恢復產品數據...');
+        try {
+          require('./scripts/restore-products.js');
+        } catch (restoreErr) {
+          console.error('❌ 恢復產品數據失敗:', restoreErr);
+        }
+      } else {
+        console.log(`✅ 產品數據已存在 (${row.count} 個產品)`);
+      }
+    });
   } catch (err) {
     console.error('❌ 數據庫初始化失敗:', err);
   }
