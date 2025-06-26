@@ -264,6 +264,8 @@ export const adminAPI = {
 // 系統設置相關API (公開)
 export const settingsAPI = {
   getPublicSettings: () => api.get('/settings/public'),
+  getSettings: () => api.get('/admin/settings'),
+  updateSettings: (data: Record<string, string>) => api.put('/admin/settings/batch', data),
 };
 
 // 訂單相關API

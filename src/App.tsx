@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
+import FloatingCartButton from '@/components/FloatingCartButton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Home from '@/pages/Home';
 import Products from '@/pages/Products';
@@ -72,6 +73,7 @@ function App() {
           </ErrorBoundary>
         </main>
         <Footer />
+        <FloatingCartButton />
         <Toaster />
       </div>
     </Router>

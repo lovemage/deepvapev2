@@ -4,7 +4,7 @@ import { Eye, Star } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Product } from '@/lib/store';
+import { Product, useSettingsStore } from '@/lib/store';
 import { formatPrice, getCategoryName, getStockStatus, getImageUrl } from '@/lib/utils';
 
 interface ProductCardProps {
@@ -14,6 +14,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
+  const { settings } = useSettingsStore();
 
   const stockStatus = getStockStatus(product.stock);
 
@@ -79,23 +80,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {product.name}
           </h3>
 
-          {/* Description */}
-          <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-            {product.description}
-          </p>
+          {/* Description - 根據設置控制顯示 */}
+          {settings.show_product_preview && (
+            <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+              {product.description}
+            </p>
+          )}
 
-          {/* Rating (Mock) */}
-          <div className="flex items-center space-x-1 mb-3">
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className="h-3 w-3 fill-yellow-400 text-yellow-400"
-                />
-              ))}
+          {/* Rating (Mock) - 根據設置控制顯示 */}
+          {settings.show_product_reviews && (
+            <div className="flex items-center space-x-1 mb-3">
+              <div className="flex">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className="h-3 w-3 fill-yellow-400 text-yellow-400"
+                  />
+                ))}
+              </div>
+              <span className="text-xs text-gray-500">(4.8)</span>
             </div>
-            <span className="text-xs text-gray-500">(4.8)</span>
-          </div>
+          )}
 
           {/* Price */}
           <div className="flex items-baseline space-x-2">

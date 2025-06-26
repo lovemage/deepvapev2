@@ -206,10 +206,24 @@ const AdminPage: React.FC = () => {
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+        console.log('🚀 準備保存設置:', settingsForm);
+
+        // 保存到後端
         await adminAPI.updateBatchSettings(settingsForm);
-        toast({ title: "設置已儲存" });
+        console.log('✅ 後端保存成功');
+
+        // 強制重新載入前端設置
+        const { useSettingsStore } = await import('@/lib/store');
+        const settingsStore = useSettingsStore.getState();
+        await settingsStore.loadSettings();
+        console.log('✅ 前端設置重新載入完成');
+
+        toast({ title: "✅ 設置已儲存", description: "商品卡片顯示已更新" });
         fetchAllData();
-    } catch(err: any) { toast({ title: '儲存失敗', description: err.message, variant: 'destructive' }); }
+    } catch(err: any) {
+        console.error('❌ 保存設置失敗:', err);
+        toast({ title: '儲存失敗', description: err.message, variant: 'destructive' });
+    }
   };
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -359,7 +373,7 @@ const AdminPage: React.FC = () => {
       <Input type="number" placeholder="折扣值" value={couponForm.value || ''} onChange={e => setCouponForm({...couponForm, value: Number(e.target.value)})} required/>
       <Input type="number" placeholder="最低消費" value={couponForm.min_amount || ''} onChange={e => setCouponForm({...couponForm, min_amount: Number(e.target.value)})} />
       <Input type="date" placeholder="到期日" value={couponForm.expires_at || ''} onChange={e => setCouponForm({...couponForm, expires_at: e.target.value})} />
-      <div className="flex items-center space-x-2"><Switch id="c-active" checked={couponForm.is_active} onCheckedChange={c => setCouponForm({...couponForm, is_active: c})} /><Label htmlFor="c-active">啟用</Label></div>
+      <div className="flex items-center space-x-2"><Switch id="c-active" checked={couponForm.is_active} onCheckedChange={c => setTimeout(() => setCouponForm({...couponForm, is_active: c}), 0)} /><Label htmlFor="c-active">啟用</Label></div>
       <Button type="submit" className="w-full">{editingCoupon ? '更新' : '新增'}</Button>
       {editingCoupon && <Button variant="outline" className="w-full" onClick={() => {setEditingCoupon(null); setCouponForm({type: 'percentage', is_active: true});}}>取消</Button>}
     </form>,
@@ -371,7 +385,7 @@ const AdminPage: React.FC = () => {
       <Input placeholder="標題" value={announcementForm.title || ''} onChange={e => setAnnouncementForm({...announcementForm, title: e.target.value})} required/>
       <Textarea placeholder="內容" value={announcementForm.content || ''} onChange={e => setAnnouncementForm({...announcementForm, content: e.target.value})} required/>
       <Select value={announcementForm.type || ''} onValueChange={(v:any) => setAnnouncementForm({...announcementForm, type: v})}><SelectTrigger><SelectValue placeholder="類型" /></SelectTrigger><SelectContent><SelectItem value="info">資訊</SelectItem><SelectItem value="warning">警告</SelectItem><SelectItem value="promotion">促銷</SelectItem></SelectContent></Select>
-      <div className="flex items-center space-x-2"><Switch id="a-active" checked={announcementForm.is_active} onCheckedChange={c => setAnnouncementForm({...announcementForm, is_active: c})} /><Label htmlFor="a-active">啟用</Label></div>
+      <div className="flex items-center space-x-2"><Switch id="a-active" checked={announcementForm.is_active} onCheckedChange={c => setTimeout(() => setAnnouncementForm({...announcementForm, is_active: c}), 0)} /><Label htmlFor="a-active">啟用</Label></div>
       <Button type="submit" className="w-full">{editingAnnouncement ? '更新' : '新增'}</Button>
       {editingAnnouncement && <Button variant="outline" className="w-full" onClick={() => {setEditingAnnouncement(null); setAnnouncementForm({type: 'info', is_active: true});}}>取消</Button>}
     </form>,
@@ -382,12 +396,57 @@ const AdminPage: React.FC = () => {
     <Card className="max-w-2xl mx-auto">
       <CardHeader><CardTitle>系統設置</CardTitle></CardHeader>
       <CardContent>
-        <form onSubmit={handleSaveSettings} className="space-y-4">
-          <div className="space-y-2"><Label>免運費門檻</Label><Input type="number" value={settingsForm.free_shipping_threshold || ''} onChange={e => setSettingsForm({...settingsForm, free_shipping_threshold: e.target.value})} /></div>
-          <div className="space-y-2"><Label>Telegram Bot Token</Label><Input value={settingsForm.telegram_bot_token || ''} onChange={e => setSettingsForm({...settingsForm, telegram_bot_token: e.target.value})} /></div>
-          <div className="space-y-2"><Label>Telegram Chat ID</Label><Input value={settingsForm.telegram_chat_id || ''} onChange={e => setSettingsForm({...settingsForm, telegram_chat_id: e.target.value})} /></div>
-          <div className="space-y-2"><Label>首頁橫幅圖片 URL</Label><Input value={settingsForm.hero_image_url || ''} onChange={e => setSettingsForm({...settingsForm, hero_image_url: e.target.value})} /></div>
-          <Button type="submit">儲存設置</Button>
+        <form onSubmit={handleSaveSettings} className="space-y-6">
+          {/* 商品顯示控制 */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">商品卡片顯示控制</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base">顯示商品評論</Label>
+                  <p className="text-sm text-gray-500">控制商品卡片是否顯示星級評分</p>
+                </div>
+                <Switch
+                  checked={settingsForm.show_product_reviews === 'true'}
+                  onCheckedChange={(checked) =>
+                    setTimeout(() => {
+                      setSettingsForm({...settingsForm, show_product_reviews: checked.toString()})
+                    }, 0)
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base">顯示商品預覽</Label>
+                  <p className="text-sm text-gray-500">控制商品卡片是否顯示描述文字</p>
+                </div>
+                <Switch
+                  checked={settingsForm.show_product_preview === 'true'}
+                  onCheckedChange={(checked) =>
+                    setTimeout(() => {
+                      setSettingsForm({...settingsForm, show_product_preview: checked.toString()})
+                    }, 0)
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 基本設置 */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">基本設置</h3>
+            <div className="space-y-2"><Label>免運費門檻</Label><Input type="number" value={settingsForm.free_shipping_threshold || ''} onChange={e => setSettingsForm({...settingsForm, free_shipping_threshold: e.target.value})} /></div>
+            <div className="space-y-2"><Label>首頁橫幅圖片 URL</Label><Input value={settingsForm.hero_image_url || ''} onChange={e => setSettingsForm({...settingsForm, hero_image_url: e.target.value})} /></div>
+          </div>
+
+          {/* Telegram 通知設置 */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">Telegram 通知設置</h3>
+            <div className="space-y-2"><Label>Telegram Bot Token</Label><Input value={settingsForm.telegram_bot_token || ''} onChange={e => setSettingsForm({...settingsForm, telegram_bot_token: e.target.value})} /></div>
+            <div className="space-y-2"><Label>Telegram Chat ID</Label><Input value={settingsForm.telegram_chat_id || ''} onChange={e => setSettingsForm({...settingsForm, telegram_chat_id: e.target.value})} /></div>
+          </div>
+
+          <Button type="submit" className="w-full">儲存設置</Button>
         </form>
       </CardContent>
     </Card>

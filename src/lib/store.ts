@@ -43,6 +43,18 @@ export interface CartItem {
   total_price: number;
 }
 
+// 系統設置類型定義
+export interface SystemSettings {
+  show_product_reviews: boolean;
+  show_product_preview: boolean;
+}
+
+// 系統設置類型定義
+export interface SystemSettings {
+  show_product_reviews: boolean;
+  show_product_preview: boolean;
+}
+
 // 優惠券類型定義
 export interface Coupon {
   id: number;
@@ -241,6 +253,90 @@ export const useAdminStore = create<AdminState>()(
     }
   )
 );
+
+// 系統設置狀態管理
+interface SettingsState {
+  settings: SystemSettings;
+  loading: boolean;
+  loadSettings: () => Promise<void>;
+  updateSettings: (newSettings: Partial<SystemSettings>) => Promise<void>;
+}
+
+export const useSettingsStore = create<SettingsState>((set, get) => ({
+  settings: {
+    show_product_reviews: true,
+    show_product_preview: true,
+  },
+  loading: false,
+
+  loadSettings: async () => {
+    try {
+      set({ loading: true });
+
+      // 直接調用後端 API 獲取設置
+      const response = await fetch('/api/settings/public');
+
+      if (response.ok) {
+        const settingsData = await response.json();
+        console.log('🔍 API 返回的原始數據:', settingsData); // 調試日誌
+        console.log('🔍 show_product_reviews 值:', settingsData.show_product_reviews, '類型:', typeof settingsData.show_product_reviews);
+        console.log('🔍 show_product_preview 值:', settingsData.show_product_preview, '類型:', typeof settingsData.show_product_preview);
+
+        const settings: SystemSettings = {
+          show_product_reviews: settingsData.show_product_reviews === 'true',
+          show_product_preview: settingsData.show_product_preview === 'true',
+        };
+
+        console.log('✅ 解析後的設置:', settings); // 調試日誌
+        set({ settings, loading: false });
+      } else {
+        throw new Error('API 調用失敗');
+      }
+    } catch (error) {
+      console.error('載入設置失敗:', error);
+      // 使用默認設置
+      const defaultSettings = {
+        show_product_reviews: true,
+        show_product_preview: true,
+      };
+      console.log('使用默認設置:', defaultSettings); // 調試日誌
+      set({
+        settings: defaultSettings,
+        loading: false
+      });
+    }
+  },
+
+  updateSettings: async (newSettings: Partial<SystemSettings>) => {
+    try {
+      const currentSettings = get().settings;
+      const updatedSettings = { ...currentSettings, ...newSettings };
+
+      // 立即更新本地狀態
+      set({ settings: updatedSettings });
+
+      // 轉換為後端格式
+      const backendSettings: Record<string, string> = {};
+      if (newSettings.show_product_reviews !== undefined) {
+        backendSettings.show_product_reviews = newSettings.show_product_reviews.toString();
+      }
+      if (newSettings.show_product_preview !== undefined) {
+        backendSettings.show_product_preview = newSettings.show_product_preview.toString();
+      }
+
+      // 使用動態導入避免循環依賴
+      const { adminAPI } = await import('./api');
+      await adminAPI.updateBatchSettings(backendSettings);
+
+    } catch (error) {
+      console.error('更新設置失敗:', error);
+      // 回滾本地狀態
+      const currentSettings = get().settings;
+      set({ settings: currentSettings });
+      throw error;
+    }
+  },
+}));
 
 // 初始化session ID
 if (typeof window !== 'undefined') {

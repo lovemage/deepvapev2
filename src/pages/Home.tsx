@@ -7,13 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ProductCard from '@/components/ProductCard';
 import SEO, { createOrganizationStructuredData } from '@/components/SEO';
-import { useProductStore } from '@/lib/store';
+import { useProductStore, useSettingsStore } from '@/lib/store';
 import { productsAPI, settingsAPI } from '@/lib/api';
 import { getCategoryName } from '@/lib/utils';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { setSelectedCategory } = useProductStore();
+  const { loadSettings: loadDisplaySettings } = useSettingsStore();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
@@ -36,6 +37,9 @@ const Home: React.FC = () => {
       if (response.data.hero_image_url) {
         setHeroImageUrl(response.data.hero_image_url);
       }
+
+      // 載入商品顯示設置
+      await loadDisplaySettings();
     } catch (error) {
       console.warn('載入系統設置失敗，使用默認設置:', error.message);
       // 使用默認圖片，不影響頁面加載
