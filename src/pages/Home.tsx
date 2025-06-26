@@ -126,7 +126,7 @@ const Home: React.FC = () => {
         <div className="relative container mx-auto px-4 py-24">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg">
-              DeepVape 專業電子煙商城
+              DeepVape 商城
             </h1>
             <p className="text-lg md:text-xl mb-8 text-gray-100 drop-shadow-md">
               精選各大品牌電子煙產品，提供最優質的購物體驗
