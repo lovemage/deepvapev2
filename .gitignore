@@ -91,7 +91,8 @@ tmp/
 temp/
 
 # Database files (keep the schema but not the actual data in production)
-# backend/database/*.db
+backend/database/*.db
+backend/database/*.db.bak
 
 # Uploads directory (user uploaded files)
 backend/uploads/

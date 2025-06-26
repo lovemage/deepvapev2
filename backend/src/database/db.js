@@ -5,8 +5,24 @@ const fs = require('fs');
 // 數據庫路徑配置 - Railway Volume 兼容
 let dbPath;
 if (process.env.NODE_ENV === 'production') {
-  // Railway 生產環境：使用 Volume 掛載路徑
+  // Railway 生產環境：優先使用 Volume，如果不存在則複製初始數據
   dbPath = process.env.DATABASE_PATH || '/app/data/vape_store.db';
+
+  // 如果 Volume 中沒有數據庫，從部署包中複製初始數據
+  const volumeDbPath = '/app/data/vape_store.db';
+  const sourceDbPath = path.join(__dirname, '../../database/vape_store.db');
+
+  if (!fs.existsSync(volumeDbPath) && fs.existsSync(sourceDbPath)) {
+    console.log('📋 首次部署，複製初始數據庫到 Volume...');
+    try {
+      fs.copyFileSync(sourceDbPath, volumeDbPath);
+      console.log('✅ 初始數據庫複製完成');
+    } catch (error) {
+      console.error('❌ 複製數據庫失敗:', error.message);
+    }
+  }
+
+  dbPath = volumeDbPath;
 } else {
   // 本地開發環境
   dbPath = path.join(__dirname, '../../database/vape_store.db');
