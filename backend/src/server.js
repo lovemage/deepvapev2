@@ -158,11 +158,20 @@ app.use('/api/*', (req, res) => {
 });
 
 // 啟動服務器
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 服務器運行在 http://localhost:${PORT}`);
   console.log(`📁 API文檔: http://localhost:${PORT}/api`);
   console.log(`🌍 環境: ${NODE_ENV}`);
-  
+
+  // 初始化數據庫（確保表結構存在）
+  try {
+    console.log('🔧 初始化數據庫表結構...');
+    require('./scripts/init-database.js');
+    console.log('✅ 數據庫初始化完成');
+  } catch (err) {
+    console.error('❌ 數據庫初始化失敗:', err);
+  }
+
   // 測試數據庫連接
   testConnection().catch(err => {
     console.error('數據庫連接測試失敗:', err);
