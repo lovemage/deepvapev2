@@ -129,7 +129,7 @@ const Home: React.FC = () => {
               DeepVape 商城
             </h1>
             <p className="text-lg md:text-xl mb-8 text-gray-100 drop-shadow-md">
-              精選各大品牌電子煙產品，提供最優質的購物體驗
+              精選各大品牌電子煙產品，提供最優質的購物體驗 - 數據持久化測試
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
