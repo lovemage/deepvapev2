@@ -5,6 +5,8 @@ const path = require('path');
 // Railway 環境中的數據庫路徑
 const dbPath = process.env.DATABASE_PATH || './backend/database/vape_store.db';
 console.log('🔍 數據庫路徑:', dbPath);
+console.log('🌍 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔗 FRONTEND_URL:', process.env.FRONTEND_URL);
 
 const db = new sqlite3.Database(dbPath);
 
@@ -72,7 +74,8 @@ async function resetAdminForRailway() {
     console.log('\n📋 Railway 登入資訊:');
     console.log('帳號:', username);
     console.log('密碼:', password);
-    console.log('管理頁面: <你的Railway域名>/admin');
+    console.log('管理頁面: https://deepvape.org/admin');
+    console.log('🔐 JWT_SECRET:', process.env.JWT_SECRET ? '已設定' : '未設定');
     
   } catch (error) {
     console.error('❌ 重置失敗:', error);

@@ -13,7 +13,7 @@ import {
 // 動態設置 API 基礎 URL
 const getApiBaseUrl = () => {
   if (import.meta.env.PROD) {
-    // 生產環境：使用相同域名的 API
+    // 生產環境：使用相同域名的 API (Railway)
     return '/api';
   } else {
     // 開發環境：使用本地後端服務器
