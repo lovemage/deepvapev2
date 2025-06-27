@@ -144,6 +144,35 @@ db.serialize(() => {
     )
   `);
 
+  // 創建默認管理員帳戶（如果不存在）
+  db.get('SELECT COUNT(*) as count FROM admins', (err, row) => {
+    if (err) {
+      console.error('❌ 檢查管理員帳戶失敗:', err);
+    } else if (row.count === 0) {
+      console.log('👤 創建默認管理員帳戶...');
+      const bcrypt = require('bcryptjs');
+      bcrypt.hash('admin123', 10, (hashErr, hashedPassword) => {
+        if (hashErr) {
+          console.error('❌ 密碼雜湊失敗:', hashErr);
+        } else {
+          db.run(
+            'INSERT INTO admins (username, password_hash) VALUES (?, ?)',
+            ['admin', hashedPassword],
+            function(insertErr) {
+              if (insertErr) {
+                console.error('❌ 創建管理員失敗:', insertErr);
+              } else {
+                console.log('✅ 默認管理員帳戶已創建 (admin/admin123)');
+              }
+            }
+          );
+        }
+      });
+    } else {
+      console.log('✅ 管理員帳戶已存在');
+    }
+  });
+
   console.log('✅ 數據庫表創建完成！');
 });
 
