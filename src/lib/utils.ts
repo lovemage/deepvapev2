@@ -82,9 +82,12 @@ export function generateId(): string {
   return Math.random().toString(36).substr(2, 9)
 }
 
-// 圖片錯誤處理
+// 圖片錯誤處理 - 使用內聯 SVG 作為默認 placeholder
 export function getImageUrl(imagePath: string): string {
-  if (!imagePath) return '/images/placeholder.jpg'
+  // 如果沒有圖片路徑，返回內聯 SVG placeholder
+  if (!imagePath) {
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwIDIwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIGZpbGw9IiNGM0Y0RjYiLz4KPHA+YXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNCAzQTIgMiAwIDAwMiA1VjE1QTIgMiAwIDAwNCAzSDRabTEyIDEySDBsNC04IDMgNiAyLTQgMyA2WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K';
+  }
   
   // 如果是完整URL，直接返回
   if (imagePath.startsWith('http')) return imagePath

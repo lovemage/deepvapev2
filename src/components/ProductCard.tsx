@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, Star } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -11,9 +11,26 @@ interface ProductCardProps {
   product: Product;
 }
 
+// SVG placeholder to avoid network requests
+const PlaceholderSVG = () => (
+  <svg 
+    className="w-full h-48 bg-gray-200 text-gray-400" 
+    fill="currentColor" 
+    viewBox="0 0 20 20"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path 
+      fillRule="evenodd" 
+      d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" 
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const { settings } = useSettingsStore();
 
   const stockStatus = getStockStatus(product.stock);
@@ -24,21 +41,45 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     navigate(`/products/${product.id}`);
   };
 
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
+    console.log('圖片載入失敗:', product.image_url);
     setImageError(true);
-  };
+    setImageLoading(false);
+  }, [product.image_url]);
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoading(false);
+  }, []);
 
   return (
-    <Card className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <Card 
+      key={product.id} 
+      className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+    >
       <Link to={`/products/${product.id}`}>
         {/* Product Image */}
         <div className="relative overflow-hidden bg-gray-100">
-          <img
-            src={imageError ? '/images/placeholder.jpg' : getImageUrl(product.image_url)}
-            alt={product.name}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={handleImageError}
-          />
+          {imageError ? (
+            <PlaceholderSVG />
+          ) : (
+            <>
+              <img
+                src={getImageUrl(product.image_url)}
+                alt={product.name}
+                className={`w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 ${
+                  imageLoading ? 'opacity-0' : 'opacity-100'
+                }`}
+                onError={handleImageError}
+                onLoad={handleImageLoad}
+                loading="lazy"
+              />
+              {imageLoading && (
+                <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+                  <div className="text-gray-400 text-sm">載入中...</div>
+                </div>
+              )}
+            </>
+          )}
           
           {/* Overlay Buttons */}
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-2">

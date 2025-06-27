@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Heart, ArrowLeft, Star, Truck, Shield, RotateCcw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -108,9 +108,10 @@ const ProductDetail: React.FC = () => {
     }
   };
 
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
+    console.log('產品詳情圖片載入失敗:', product?.image_url);
     setImageError(true);
-  };
+  }, [product?.image_url]);
 
   const getCurrentPrice = () => {
     if (!product) return 0;
@@ -200,12 +201,30 @@ const ProductDetail: React.FC = () => {
         <div className="space-y-4">
           <Card className="overflow-hidden">
             <div className="relative bg-gray-100">
-              <img
-                src={imageError ? '/images/placeholder.jpg' : getImageUrl(product.image_url)}
-                alt={product.name}
-                className="w-full h-96 object-cover"
-                onError={handleImageError}
-              />
+              {imageError ? (
+                <div className="w-full h-96 bg-gray-200 text-gray-400 flex items-center justify-center">
+                  <svg 
+                    className="w-20 h-20" 
+                    fill="currentColor" 
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      fillRule="evenodd" 
+                      d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" 
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              ) : (
+                <img
+                  src={getImageUrl(product.image_url)}
+                  alt={product.name}
+                  className="w-full h-96 object-cover"
+                  onError={handleImageError}
+                  loading="lazy"
+                />
+              )}
               {stockStatus.status === 'out-of-stock' && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <Badge variant="destructive" className="text-lg px-4 py-2">

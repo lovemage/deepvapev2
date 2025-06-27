@@ -288,6 +288,12 @@ const Cart: React.FC = () => {
                       src={getImageUrl(item.image_url)}
                       alt={item.name}
                       className="w-20 h-20 object-cover rounded-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNNCAzQTIgMiAwIDAwMiA1VjE1QTIgMiAwIDAwNCAzSDRabTEyIDEySDBsNC04IDMgNiAyLTQgMyA2WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K';
+                        target.onerror = null; // 防止無限循環
+                      }}
+                      loading="lazy"
                     />
                   </div>
 
