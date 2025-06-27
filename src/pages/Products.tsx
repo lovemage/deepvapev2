@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,9 @@ import { productsAPI } from '@/lib/api';
 import { getCategoryName, debounce } from '@/lib/utils';
 
 const Products: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
   const {
     products,
     categories,
@@ -56,6 +60,25 @@ const Products: React.FC = () => {
     setSearchQuery(query);
   }, 500);
 
+  // 處理 URL 參數
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const categoryParam = searchParams.get('category');
+    const brandParam = searchParams.get('brand');
+    const searchParam = searchParams.get('search');
+
+    if (categoryParam && categoryParam !== selectedCategory) {
+      setSelectedCategory(categoryParam);
+    }
+    if (brandParam && brandParam !== selectedBrand) {
+      setSelectedBrand(brandParam);
+    }
+    if (searchParam && searchParam !== searchQuery) {
+      setSearchQuery(searchParam);
+      setSearchInput(searchParam);
+    }
+  }, [location.search]);
+
   useEffect(() => {
     loadProducts();
   }, [selectedCategory, selectedBrand, searchQuery, currentPage, sortBy]);
@@ -68,6 +91,31 @@ const Products: React.FC = () => {
   useEffect(() => {
     debouncedSearch(searchInput);
   }, [searchInput]);
+
+  // 更新 URL 參數
+  useEffect(() => {
+    const searchParams = new URLSearchParams();
+    
+    if (selectedCategory) {
+      searchParams.set('category', selectedCategory);
+    }
+    if (selectedBrand) {
+      searchParams.set('brand', selectedBrand);
+    }
+    if (searchQuery) {
+      searchParams.set('search', searchQuery);
+    }
+    if (currentPage > 1) {
+      searchParams.set('page', currentPage.toString());
+    }
+
+    const newSearch = searchParams.toString();
+    const currentSearch = location.search.replace('?', '');
+    
+    if (newSearch !== currentSearch) {
+      navigate(`/products${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+    }
+  }, [selectedCategory, selectedBrand, searchQuery, currentPage, navigate, location.search]);
 
   const loadProducts = async () => {
     try {
@@ -114,6 +162,7 @@ const Products: React.FC = () => {
     setSearchInput('');
     setPriceRange([0, 3000]);
     setCurrentPage(1);
+    navigate('/products', { replace: true });
   };
 
   const filteredProducts = products.filter(product => {
