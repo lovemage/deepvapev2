@@ -120,6 +120,13 @@ const Products: React.FC = () => {
   const loadProducts = async () => {
     try {
       setLoading(true);
+      console.log('🔍 開始載入產品...', {
+        category: selectedCategory,
+        brand: selectedBrand,
+        search: searchQuery,
+        page: currentPage
+      });
+
       const response = await productsAPI.getProducts({
         category: selectedCategory || undefined,
         brand: selectedBrand || undefined,
@@ -128,10 +135,18 @@ const Products: React.FC = () => {
         limit: 12,
       });
 
+      console.log('✅ 產品載入成功:', response.data);
       setProducts(response.data.products);
       setTotalPages(response.data.pagination.pages);
-    } catch (error) {
-      console.error('載入產品失敗:', error);
+    } catch (error: any) {
+      console.error('❌ 載入產品失敗:', error);
+      
+      // 如果是網絡錯誤，顯示友好的錯誤訊息
+      if (error.code === 'ECONNABORTED') {
+        console.log('📶 API 響應慢，已自動切換到備用數據');
+      } else {
+        console.error('API 錯誤詳情:', error.response?.data || error.message);
+      }
     } finally {
       setLoading(false);
     }

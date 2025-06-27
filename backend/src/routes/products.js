@@ -5,10 +5,16 @@ const router = express.Router();
 // 獲取產品列表（支持分類和搜索）
 router.get('/', async (req, res) => {
   try {
+    const startTime = Date.now();
+    console.log('📋 收到產品列表請求:', req.query);
+    
     const { category, brand, search, page = 1, limit = 12 } = req.query;
     
+    // 優化查詢：使用索引友好的查詢
     let sql = `
-      SELECT * FROM products p WHERE 1=1
+      SELECT p.*, 
+        (SELECT COUNT(*) FROM product_variants WHERE product_id = p.id) as variant_count
+      FROM products p WHERE 1=1
     `;
     
     const params = [];
@@ -35,18 +41,34 @@ router.get('/', async (req, res) => {
     sql += ' LIMIT ? OFFSET ?';
     params.push(parseInt(limit), offset);
     
+    console.log('🔍 執行產品查詢...');
     const products = await dbAsync.all(sql, params);
     
-    // 為每個產品獲取變體數據
-    const processedProducts = await Promise.all(products.map(async (product) => {
-      const variants = await dbAsync.all(`
-        SELECT * FROM product_variants WHERE product_id = ?
-      `, [product.id]);
-      
-      return {
-        ...product,
-        variants
-      };
+    // 批量獲取所有變體數據（優化性能）
+    const productIds = products.map(p => p.id);
+    let allVariants = [];
+    
+    if (productIds.length > 0) {
+      const placeholders = productIds.map(() => '?').join(',');
+      allVariants = await dbAsync.all(`
+        SELECT * FROM product_variants 
+        WHERE product_id IN (${placeholders})
+        ORDER BY product_id, id
+      `, productIds);
+    }
+    
+    // 將變體數據分組到對應的產品
+    const variantMap = new Map();
+    allVariants.forEach(variant => {
+      if (!variantMap.has(variant.product_id)) {
+        variantMap.set(variant.product_id, []);
+      }
+      variantMap.get(variant.product_id).push(variant);
+    });
+    
+    const processedProducts = products.map(product => ({
+      ...product,
+      variants: variantMap.get(product.id) || []
     }));
     
     // 獲取總數
@@ -70,6 +92,9 @@ router.get('/', async (req, res) => {
     
     const countResult = await dbAsync.get(countSql, countParams);
     
+    const endTime = Date.now();
+    console.log(`✅ 產品查詢完成，耗時: ${endTime - startTime}ms，返回 ${processedProducts.length} 個產品`);
+    
     res.json({
       products: processedProducts,
       pagination: {
@@ -80,8 +105,12 @@ router.get('/', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('獲取產品列表失敗:', error);
-    res.status(500).json({ error: '獲取產品列表失敗' });
+    console.error('❌ 獲取產品列表失敗:', error);
+    res.status(500).json({ 
+      error: '獲取產品列表失敗',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 

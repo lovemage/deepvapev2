@@ -25,7 +25,7 @@ const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // 增加超時時間到 30 秒
 });
 
 // 請求攔截器
@@ -64,11 +64,21 @@ export const productsAPI = {
     limit?: number;
   }) => {
     try {
-      return await api.get('/products', { params });
-    } catch (error) {
-      console.warn('API 不可用，使用模擬數據:', error);
-      const result = searchProducts(params || {});
-      return { data: result };
+      console.log('正在請求產品數據...', { params, baseURL: API_BASE_URL });
+      const response = await api.get('/products', { params });
+      console.log('產品數據請求成功');
+      return response;
+    } catch (error: any) {
+      console.error('API 請求失敗，切換到模擬數據:', error.message);
+      
+      // 如果是超時或網絡錯誤，使用 mock 數據
+      if (error.code === 'ECONNABORTED' || error.code === 'NETWORK_ERROR' || error.response?.status >= 500) {
+        const result = searchProducts(params || {});
+        return { data: result };
+      }
+      
+      // 其他錯誤重新拋出
+      throw error;
     }
   },
   
@@ -92,29 +102,35 @@ export const productsAPI = {
   getCategories: async () => {
     try {
       return await api.get('/products/categories/list');
-    } catch (error) {
-      console.warn('API 不可用，使用模擬數據:', error);
-      return { data: mockCategories };
+    } catch (error: any) {
+      console.error('分類 API 請求失敗，使用模擬數據:', error.message);
+      if (error.code === 'ECONNABORTED' || error.code === 'NETWORK_ERROR' || error.response?.status >= 500) {
+        return { data: mockCategories };
+      }
+      throw error;
     }
   },
   
   getBrands: async (category?: string) => {
     try {
       return await api.get('/products/brands/list', { params: { category } });
-    } catch (error) {
-      console.warn('API 不可用，使用模擬數據:', error);
-      let brands = mockBrands;
-      if (category) {
-        // 根據分類過濾品牌
-        if (category === 'host') {
-          brands = mockBrands.filter(b => ['JUUL', 'IQOS', 'Vaporesso'].includes(b.brand));
-        } else if (category === 'cartridge') {
-          brands = mockBrands.filter(b => ['JUUL', 'IQOS', 'Vaporesso'].includes(b.brand));
-        } else if (category === 'disposable') {
-          brands = mockBrands.filter(b => ['Puff Bar', 'Hyde', 'Elf Bar'].includes(b.brand));
+    } catch (error: any) {
+      console.error('品牌 API 請求失敗，使用模擬數據:', error.message);
+      if (error.code === 'ECONNABORTED' || error.code === 'NETWORK_ERROR' || error.response?.status >= 500) {
+        let brands = mockBrands;
+        if (category) {
+          // 根據分類過濾品牌
+          if (category === 'host') {
+            brands = mockBrands.filter(b => ['JUUL', 'IQOS', 'Vaporesso'].includes(b.brand));
+          } else if (category === 'cartridge') {
+            brands = mockBrands.filter(b => ['JUUL', 'IQOS', 'Vaporesso'].includes(b.brand));
+          } else if (category === 'disposable') {
+            brands = mockBrands.filter(b => ['Puff Bar', 'Hyde', 'Elf Bar'].includes(b.brand));
+          }
         }
+        return { data: brands };
       }
-      return { data: brands };
+      throw error;
     }
   },
 };
