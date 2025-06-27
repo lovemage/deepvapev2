@@ -188,8 +188,21 @@ export const announcementsAPI = {
 
 // 管理員相關API
 export const adminAPI = {
-  login: (data: { username: string; password: string }) => 
-    api.post('/admin/login', data),
+  login: async (data: { username: string; password: string }) => {
+    try {
+      console.log('🔐 嘗試管理員登入...', { baseURL: API_BASE_URL, username: data.username });
+      const response = await api.post('/admin/login', data);
+      console.log('✅ 登入成功');
+      return response;
+    } catch (error: any) {
+      console.error('❌ 登入失敗:', error.response?.data || error.message);
+      // 提供更詳細的錯誤信息
+      if (error.response?.status === 401) {
+        throw new Error(error.response.data?.error || '用戶名或密碼錯誤');
+      }
+      throw error;
+    }
+  },
   
   verify: () => api.get('/admin/verify'),
   
