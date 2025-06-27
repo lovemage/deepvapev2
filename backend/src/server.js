@@ -166,7 +166,8 @@ app.listen(PORT, '0.0.0.0', async () => {
   // 初始化數據庫（確保表結構存在）
   try {
     console.log('🔧 初始化數據庫表結構...');
-    require('./scripts/init-database.js');
+    const initDb = require('./scripts/init-database.js');
+    await initDb();
     console.log('✅ 數據庫初始化完成');
     
     // 檢查是否需要強制重設管理員
@@ -176,32 +177,21 @@ app.listen(PORT, '0.0.0.0', async () => {
       await forceAdminReset();
     }
 
-    // 檢查是否需要恢復產品數據
+    // 檢查產品數據是否存在
     const { dbAsync } = require('./database/db');
-    dbAsync.get('SELECT COUNT(*) as count FROM products')
-      .then(row => {
-        if (row.count === 0) {
-          console.log('📦 檢測到空的產品表，開始恢復產品數據...');
-          try {
-            require('./scripts/restore-products.js');
-          } catch (restoreErr) {
-            console.error('❌ 恢復產品數據失敗:', restoreErr);
-          }
-        } else {
-          console.log(`✅ 產品數據已存在 (${row.count} 個產品)`);
-        }
-      })
-      .catch(err => {
-        console.error('❌ 檢查產品數據失敗:', err);
-      });
+    const row = await dbAsync.get('SELECT COUNT(*) as count FROM products');
+    if (row.count === 0) {
+      console.log('📦 檢測到空的產品表，如果是首次部署，請確保初始數據庫已正確複製到 Volume。');
+    } else {
+      console.log(`✅ 產品數據已存在 (${row.count} 個產品)`);
+    }
   } catch (err) {
     console.error('❌ 數據庫初始化失敗:', err);
+    process.exit(1);
   }
 
   // 測試數據庫連接
-  testConnection().catch(err => {
-    console.error('數據庫連接測試失敗:', err);
-  });
+  await testConnection();
 });
 
 module.exports = app;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,150 +33,104 @@ const Products: React.FC = () => {
     products,
     categories,
     brands,
-    selectedCategory,
-    selectedBrand,
-    searchQuery,
-    currentPage,
-    totalPages,
     loading,
+    totalPages,
     setProducts,
     setCategories,
     setBrands,
-    setSelectedCategory,
-    setSelectedBrand,
-    setSearchQuery,
-    setCurrentPage,
     setTotalPages,
     setLoading,
   } = useProductStore();
 
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const selectedCategory = useMemo(() => searchParams.get('category') || '', [searchParams]);
+  const selectedBrand = useMemo(() => searchParams.get('brand') || '', [searchParams]);
+  const searchQuery = useMemo(() => searchParams.get('search') || '', [searchParams]);
+  const currentPage = useMemo(() => parseInt(searchParams.get('page') || '1', 10), [searchParams]);
+
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('created_at');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 3000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [searchInput, setSearchInput] = useState(searchQuery);
 
-  // 防抖搜索
-  const debouncedSearch = debounce((query: string) => {
-    setSearchQuery(query);
-  }, 500);
-
-  // 處理 URL 參數
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const categoryParam = searchParams.get('category');
-    const brandParam = searchParams.get('brand');
-    const searchParam = searchParams.get('search');
-
-    if (categoryParam && categoryParam !== selectedCategory) {
-      setSelectedCategory(categoryParam);
+  const updateUrlParams = useCallback((newParams: Record<string, string | null>) => {
+    const currentParams = new URLSearchParams(location.search);
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value) {
+        currentParams.set(key, value);
+      } else {
+        currentParams.delete(key);
+      }
+    });
+    if (newParams.category !== undefined || newParams.brand !== undefined || newParams.search !== undefined) {
+      currentParams.set('page', '1');
     }
-    if (brandParam && brandParam !== selectedBrand) {
-      setSelectedBrand(brandParam);
-    }
-    if (searchParam && searchParam !== searchQuery) {
-      setSearchQuery(searchParam);
-      setSearchInput(searchParam);
-    }
-  }, [location.search]);
+    navigate(`/products?${currentParams.toString()}`, { replace: true });
+  }, [navigate, location.search]);
 
   useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        console.log('🔍 開始載入產品...', { category: selectedCategory, brand: selectedBrand, search: searchQuery, page: currentPage });
+        const response = await productsAPI.getProducts({
+          category: selectedCategory || undefined,
+          brand: selectedBrand || undefined,
+          search: searchQuery || undefined,
+          page: currentPage,
+          limit: 12,
+        });
+        console.log('✅ 產品載入成功:', response.data);
+        setProducts(response.data.products);
+        setTotalPages(response.data.pagination.pages);
+      } catch (error: any) {
+        console.error('❌ 載入產品失敗:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     loadProducts();
-  }, [selectedCategory, selectedBrand, searchQuery, currentPage, sortBy]);
+  }, [selectedCategory, selectedBrand, searchQuery, currentPage, setProducts, setTotalPages, setLoading]);
 
   useEffect(() => {
-    loadCategories();
-    loadBrands();
-  }, []);
+    const loadStaticData = async () => {
+      try {
+        const [catResponse, brandResponse] = await Promise.all([
+          productsAPI.getCategories(),
+          productsAPI.getBrands()
+        ]);
+        setCategories(catResponse.data);
+        setBrands(brandResponse.data);
+      } catch (error) {
+        console.error('載入初始數據失敗:', error);
+      }
+    };
+    loadStaticData();
+  }, [setCategories, setBrands]);
+
+  const debouncedSearch = useMemo(() => debounce((query: string) => {
+    updateUrlParams({ search: query });
+  }, 500), [updateUrlParams]);
 
   useEffect(() => {
     debouncedSearch(searchInput);
-  }, [searchInput]);
+  }, [searchInput, debouncedSearch]);
 
-  // 更新 URL 參數
-  useEffect(() => {
-    const searchParams = new URLSearchParams();
-    
-    if (selectedCategory) {
-      searchParams.set('category', selectedCategory);
-    }
-    if (selectedBrand) {
-      searchParams.set('brand', selectedBrand);
-    }
-    if (searchQuery) {
-      searchParams.set('search', searchQuery);
-    }
-    if (currentPage > 1) {
-      searchParams.set('page', currentPage.toString());
-    }
-
-    const newSearch = searchParams.toString();
-    const currentSearch = location.search.replace('?', '');
-    
-    if (newSearch !== currentSearch) {
-      navigate(`/products${newSearch ? `?${newSearch}` : ''}`, { replace: true });
-    }
-  }, [selectedCategory, selectedBrand, searchQuery, currentPage, navigate, location.search]);
-
-  const loadProducts = async () => {
-    try {
-      setLoading(true);
-      console.log('🔍 開始載入產品...', {
-        category: selectedCategory,
-        brand: selectedBrand,
-        search: searchQuery,
-        page: currentPage
-      });
-
-      const response = await productsAPI.getProducts({
-        category: selectedCategory || undefined,
-        brand: selectedBrand || undefined,
-        search: searchQuery || undefined,
-        page: currentPage,
-        limit: 12,
-      });
-
-      console.log('✅ 產品載入成功:', response.data);
-      setProducts(response.data.products);
-      setTotalPages(response.data.pagination.pages);
-    } catch (error: any) {
-      console.error('❌ 載入產品失敗:', error);
-      
-      // 如果是網絡錯誤，顯示友好的錯誤訊息
-      if (error.code === 'ECONNABORTED') {
-        console.log('📶 API 響應慢，已自動切換到備用數據');
-      } else {
-        console.error('API 錯誤詳情:', error.response?.data || error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
+  const handleCategoryChange = (category: string) => {
+    updateUrlParams({ category: selectedCategory === category ? null : category });
+  };
+  
+  const handleBrandChange = (brand: string) => {
+    updateUrlParams({ brand: selectedBrand === brand ? null : brand });
   };
 
-  const loadCategories = async () => {
-    try {
-      const response = await productsAPI.getCategories();
-      setCategories(response.data);
-    } catch (error) {
-      console.error('載入分類失敗:', error);
-    }
-  };
-
-  const loadBrands = async () => {
-    try {
-      const response = await productsAPI.getBrands(selectedCategory || undefined);
-      setBrands(response.data);
-    } catch (error) {
-      console.error('載入品牌失敗:', error);
-    }
+  const handlePageChange = (page: number) => {
+    updateUrlParams({ page: page.toString() });
   };
 
   const resetFilters = () => {
-    setSelectedCategory('');
-    setSelectedBrand('');
-    setSearchQuery('');
     setSearchInput('');
-    setPriceRange([0, 3000]);
-    setCurrentPage(1);
+    setPriceRange([0, 5000]);
     navigate('/products', { replace: true });
   };
 
@@ -199,7 +153,6 @@ const Products: React.FC = () => {
 
   const FilterSidebar = () => (
     <div className="space-y-6">
-      {/* Search */}
       <div>
         <label className="text-sm font-medium text-gray-900 mb-2 block">
           搜索商品
@@ -212,7 +165,6 @@ const Products: React.FC = () => {
         />
       </div>
 
-      {/* Category Filter */}
       <div>
         <label className="text-sm font-medium text-gray-900 mb-3 block">
           商品分類
@@ -222,7 +174,7 @@ const Products: React.FC = () => {
             <Checkbox
               id="all-categories"
               checked={!selectedCategory}
-              onCheckedChange={() => setSelectedCategory('')}
+              onCheckedChange={() => handleCategoryChange('')}
             />
             <label htmlFor="all-categories" className="text-sm">
               所有分類
@@ -233,11 +185,7 @@ const Products: React.FC = () => {
               <Checkbox
                 id={category.category}
                 checked={selectedCategory === category.category}
-                onCheckedChange={() => 
-                  setSelectedCategory(
-                    selectedCategory === category.category ? '' : category.category
-                  )
-                }
+                onCheckedChange={() => handleCategoryChange(category.category)}
               />
               <label htmlFor={category.category} className="text-sm">
                 {getCategoryName(category.category)} ({category.count})
@@ -247,7 +195,6 @@ const Products: React.FC = () => {
         </div>
       </div>
 
-      {/* Brand Filter */}
       <div>
         <label className="text-sm font-medium text-gray-900 mb-3 block">
           品牌
@@ -257,7 +204,7 @@ const Products: React.FC = () => {
             <Checkbox
               id="all-brands"
               checked={!selectedBrand}
-              onCheckedChange={() => setSelectedBrand('')}
+              onCheckedChange={() => handleBrandChange('')}
             />
             <label htmlFor="all-brands" className="text-sm">
               所有品牌
@@ -268,11 +215,7 @@ const Products: React.FC = () => {
               <Checkbox
                 id={brand.brand}
                 checked={selectedBrand === brand.brand}
-                onCheckedChange={() => 
-                  setSelectedBrand(
-                    selectedBrand === brand.brand ? '' : brand.brand
-                  )
-                }
+                onCheckedChange={() => handleBrandChange(brand.brand)}
               />
               <label htmlFor={brand.brand} className="text-sm">
                 {brand.brand} ({brand.count})
@@ -282,7 +225,6 @@ const Products: React.FC = () => {
         </div>
       </div>
 
-      {/* Price Range */}
       <div>
         <label className="text-sm font-medium text-gray-900 mb-3 block">
           價格範圍
@@ -311,14 +253,12 @@ const Products: React.FC = () => {
         </div>
       </div>
 
-      {/* Reset Button */}
       <Button variant="outline" onClick={resetFilters} className="w-full">
         重置篩選
       </Button>
     </div>
   );
 
-  // 生成動態SEO內容
   const generateSEOContent = () => {
     let title = '商品列表';
     let description = '瀏覽 DeepVape 電子煙商城的所有商品';
@@ -369,7 +309,6 @@ const Products: React.FC = () => {
         url={`/products${selectedCategory ? `?category=${selectedCategory}` : ''}${selectedBrand ? `${selectedCategory ? '&' : '?'}brand=${selectedBrand}` : ''}`}
         structuredData={createBreadcrumbStructuredData(breadcrumbs)}
       />
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">商品列表</h1>
@@ -381,7 +320,6 @@ const Products: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-4 mt-4 md:mt-0">
-          {/* Sort */}
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -394,7 +332,6 @@ const Products: React.FC = () => {
             </SelectContent>
           </Select>
 
-          {/* View Mode */}
           <div className="flex border rounded-lg">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -414,7 +351,6 @@ const Products: React.FC = () => {
             </Button>
           </div>
 
-          {/* Mobile Filter */}
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="md:hidden">
@@ -438,7 +374,6 @@ const Products: React.FC = () => {
       </div>
 
       <div className="flex gap-8">
-        {/* Desktop Sidebar */}
         <div className="hidden md:block w-64 flex-shrink-0">
           <div className="sticky top-24">
             <div className="bg-white rounded-lg border p-6">
@@ -451,7 +386,6 @@ const Products: React.FC = () => {
           </div>
         </div>
 
-        {/* Products Grid */}
         <div className="flex-1">
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -493,14 +427,13 @@ const Products: React.FC = () => {
                 ))}
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex justify-center mt-12">
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
                       disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(currentPage - 1)}
+                      onClick={() => handlePageChange(currentPage - 1)}
                     >
                       上一頁
                     </Button>
@@ -516,7 +449,7 @@ const Products: React.FC = () => {
                           <Button
                             key={page}
                             variant={currentPage === page ? 'default' : 'outline'}
-                            onClick={() => setCurrentPage(page)}
+                            onClick={() => handlePageChange(page)}
                           >
                             {page}
                           </Button>
@@ -533,7 +466,7 @@ const Products: React.FC = () => {
                     <Button
                       variant="outline"
                       disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(currentPage + 1)}
+                      onClick={() => handlePageChange(currentPage + 1)}
                     >
                       下一頁
                     </Button>

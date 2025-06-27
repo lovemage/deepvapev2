@@ -2,33 +2,56 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-// 數據庫路徑配置 - Railway Volume 兼容
 let dbPath;
-if (process.env.NODE_ENV === 'production') {
-  // Railway 生產環境：優先使用 Volume，如果不存在則複製初始數據
+
+// 透過 Railway 提供的環境變量來判斷是否在 Railway 環境中運行
+if (process.env.RAILWAY_DEPLOYMENT_ID) {
+  console.log('🚂 檢測到 Railway 生產環境...');
+  // 在 Railway 環境中，總是使用環境變量指定的路徑，默認為 Volume 路徑
   dbPath = process.env.DATABASE_PATH || '/app/data/vape_store.db';
-
-  // 如果 Volume 中沒有數據庫，從部署包中複製初始數據
-  const volumeDbPath = '/app/data/vape_store.db';
+  
+  const volumeDbPath = dbPath;
   const sourceDbPath = path.join(__dirname, '../../database/vape_store.db');
+  const volumeDir = path.dirname(volumeDbPath);
 
-  if (!fs.existsSync(volumeDbPath) && fs.existsSync(sourceDbPath)) {
-    console.log('📋 首次部署，複製初始數據庫到 Volume...');
+  // 確保 Volume 目錄存在
+  if (!fs.existsSync(volumeDir)) {
     try {
-      fs.copyFileSync(sourceDbPath, volumeDbPath);
-      console.log('✅ 初始數據庫複製完成');
+      fs.mkdirSync(volumeDir, { recursive: true });
+      console.log(`📁 [Volume] 創建數據庫目錄: ${volumeDir}`);
     } catch (error) {
-      console.error('❌ 複製數據庫失敗:', error.message);
+      console.error(`❌ [Volume] 創建數據庫目錄失敗: ${error.message}`);
     }
   }
-
-  dbPath = volumeDbPath;
+  
+  // 如果設置了 FORCE_DB_OVERWRITE，則強制從 repo 複製
+  if (process.env.FORCE_DB_OVERWRITE === 'true' && fs.existsSync(sourceDbPath)) {
+    try {
+      console.log(`⚠️ 偵測到 FORCE_DB_OVERWRITE，強制從 repo 覆蓋數據庫...`);
+      fs.copyFileSync(sourceDbPath, volumeDbPath);
+      console.log(`✅ 成功強制覆蓋數據庫: ${volumeDbPath}`);
+    } catch (err) {
+      console.error(`❌ 強制覆蓋數據庫失敗: ${err.message}`);
+    }
+  } 
+  // 否則，如果 Volume 中的數據庫不存在，則從 repo 複製初始數據庫
+  else if (!fs.existsSync(volumeDbPath) && fs.existsSync(sourceDbPath)) {
+    try {
+      console.log(`📋 首次部署或數據庫丟失，正在從 repo 複製初始數據庫到 Volume...`);
+      fs.copyFileSync(sourceDbPath, volumeDbPath);
+      console.log(`✅ 成功複製初始數據庫到 Volume: ${volumeDbPath}`);
+    } catch (err) {
+      console.error(`❌ 複製數據庫失敗: ${err.message}`);
+    }
+  } else if (fs.existsSync(volumeDbPath)) {
+     console.log(`✅ Volume 中的數據庫已存在，跳過複製: ${volumeDbPath}`);
+  }
 } else {
-  // 本地開發環境
+  console.log('💻 檢測到本地開發環境...');
   dbPath = path.join(__dirname, '../../database/vape_store.db');
 }
 
-// 確保數據庫目錄存在
+// 確保數據庫目錄存在 (主要針對本地環境)
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   try {

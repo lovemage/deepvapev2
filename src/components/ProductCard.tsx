@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, Star } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -10,6 +10,14 @@ import { formatPrice, getCategoryName, getStockStatus, getImageUrl } from '@/lib
 interface ProductCardProps {
   product: Product;
 }
+
+// 全局圖片狀態管理
+interface ImageState {
+  loaded: boolean;
+  error: boolean;
+}
+
+const globalImageStates = new Map<string, ImageState>();
 
 // SVG placeholder to avoid network requests
 const PlaceholderSVG = () => (
@@ -27,12 +35,20 @@ const PlaceholderSVG = () => (
   </svg>
 );
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) => {
   const navigate = useNavigate();
-  const [imageError, setImageError] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
+  const imageUrl = getImageUrl(product.image_url);
   const { settings } = useSettingsStore();
 
+  // 從全局狀態獲取圖片狀態，如果不存在則初始化
+  const getImageState = (): ImageState => {
+    if (!globalImageStates.has(imageUrl)) {
+      globalImageStates.set(imageUrl, { loaded: false, error: false });
+    }
+    return globalImageStates.get(imageUrl)!;
+  };
+
+  const [imageState, setImageState] = useState<ImageState>(getImageState);
   const stockStatus = getStockStatus(product.stock);
 
   const viewDetails = (e: React.MouseEvent) => {
@@ -41,15 +57,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     navigate(`/products/${product.id}`);
   };
 
+  const updateImageState = useCallback((newState: Partial<ImageState>) => {
+    const updatedState = { ...getImageState(), ...newState };
+    globalImageStates.set(imageUrl, updatedState);
+    setImageState(updatedState);
+  }, [imageUrl]);
+
   const handleImageError = useCallback(() => {
-    console.log('圖片載入失敗:', product.image_url);
-    setImageError(true);
-    setImageLoading(false);
-  }, [product.image_url]);
+    console.log('圖片載入失敗:', imageUrl);
+    updateImageState({ error: true, loaded: true });
+  }, [imageUrl, updateImageState]);
 
   const handleImageLoad = useCallback(() => {
-    setImageLoading(false);
-  }, []);
+    updateImageState({ loaded: true, error: false });
+  }, [imageUrl, updateImageState]);
+
+  // 監聽全局狀態變化
+  useEffect(() => {
+    const currentState = getImageState();
+    setImageState(currentState);
+  }, [imageUrl]);
 
   return (
     <Card 
@@ -59,21 +86,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <Link to={`/products/${product.id}`}>
         {/* Product Image */}
         <div className="relative overflow-hidden bg-gray-100">
-          {imageError ? (
+          {imageState.error ? (
             <PlaceholderSVG />
           ) : (
             <>
               <img
-                src={getImageUrl(product.image_url)}
+                src={imageUrl}
                 alt={product.name}
                 className={`w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300 ${
-                  imageLoading ? 'opacity-0' : 'opacity-100'
+                  imageState.loaded ? 'opacity-100' : 'opacity-0'
                 }`}
                 onError={handleImageError}
                 onLoad={handleImageLoad}
                 loading="lazy"
               />
-              {imageLoading && (
+              {!imageState.loaded && (
                 <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
                   <div className="text-gray-400 text-sm">載入中...</div>
                 </div>
@@ -177,6 +204,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </CardFooter>
     </Card>
   );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;
