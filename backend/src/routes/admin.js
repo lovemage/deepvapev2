@@ -59,6 +59,42 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// 臨時：重設管理員帳戶 (僅用於修復生產環境)
+router.post('/reset-admin-emergency', async (req, res) => {
+  try {
+    const { secret } = req.body;
+    
+    // 安全檢查
+    if (secret !== 'deepvape-emergency-reset-2024') {
+      return res.status(403).json({ error: '無效的安全密鑰' });
+    }
+    
+    console.log('🚨 執行緊急管理員重設...');
+    
+    // 刪除現有管理員
+    await dbAsync.run('DELETE FROM admins WHERE username = ?', ['admin']);
+    
+    // 創建新管理員
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const result = await dbAsync.run(
+      'INSERT INTO admins (username, password_hash) VALUES (?, ?)',
+      ['admin', hashedPassword]
+    );
+    
+    console.log('✅ 緊急管理員重設完成，ID:', result.lastID);
+    
+    res.json({ 
+      success: true, 
+      message: '管理員帳戶已重設',
+      adminId: result.lastID 
+    });
+    
+  } catch (error) {
+    console.error('❌ 緊急重設失敗:', error);
+    res.status(500).json({ error: '重設失敗: ' + error.message });
+  }
+});
+
 // 管理員登錄
 router.post('/login', async (req, res) => {
   try {
