@@ -1,0 +1,5 @@
+# Railway 構建配置
+export NPM_CONFIG_LOGLEVEL=error
+export NPM_CONFIG_FUND=false
+export NPM_CONFIG_AUDIT=false
+export NPM_CONFIG_PROGRESS=false 

@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:frontend && npm run build:backend",
-    "build:frontend": "tsc -b && vite build && npm run copy-sitemap",
-    "build:backend": "cd backend && npm install --production",
+    "build:frontend": "tsc -b && vite build --silent && npm run copy-sitemap",
+    "build:backend": "cd backend && npm install --omit=dev --silent",
     "copy-sitemap": "cp public/sitemap.xml dist/sitemap.xml",
     "start": "cd backend && npm start",
     "lint": "eslint .",
