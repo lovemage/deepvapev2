@@ -168,6 +168,13 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.log('🔧 初始化數據庫表結構...');
     require('./scripts/init-database.js');
     console.log('✅ 數據庫初始化完成');
+    
+    // 檢查是否需要強制重設管理員
+    if (process.env.FORCE_ADMIN_RESET === 'true') {
+      console.log('🚨 檢測到強制管理員重設標記，執行重設...');
+      const forceAdminReset = require('./scripts/force-admin-reset.js');
+      await forceAdminReset();
+    }
 
     // 檢查是否需要恢復產品數據
     const { dbAsync } = require('./database/db');
