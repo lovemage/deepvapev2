@@ -157,8 +157,30 @@ app.use('/api/*', (req, res) => {
   });
 });
 
+// 添加進程錯誤處理
+process.on('uncaughtException', (error) => {
+  console.error('❌ 未捕獲的異常:', error);
+  // 不要立即退出，記錄錯誤但繼續運行
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ 未處理的 Promise 拒絕:', reason);
+  // 不要立即退出，記錄錯誤但繼續運行
+});
+
+// 優雅關閉處理
+process.on('SIGTERM', () => {
+  console.log('📡 收到 SIGTERM 信號，正在優雅關閉...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('📡 收到 SIGINT 信號，正在優雅關閉...');
+  process.exit(0);
+});
+
 // 啟動服務器
-app.listen(PORT, '0.0.0.0', async () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 服務器運行在 http://localhost:${PORT}`);
   console.log(`📁 API文檔: http://localhost:${PORT}/api`);
   console.log(`🌍 環境: ${NODE_ENV}`);
@@ -187,7 +209,8 @@ app.listen(PORT, '0.0.0.0', async () => {
     }
   } catch (err) {
     console.error('❌ 數據庫初始化失敗:', err);
-    process.exit(1);
+    console.log('⚠️ 服務器將繼續運行，但某些功能可能不可用');
+    // 不要退出，讓服務器繼續運行
   }
 
   // 測試數據庫連接
