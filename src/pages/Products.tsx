@@ -63,7 +63,12 @@ const Products: React.FC = () => {
       }
     });
     // 只有在篩選條件改變時才重置頁面，分頁操作不重置
-    if (resetPage && (newParams.category !== undefined || newParams.brand !== undefined || newParams.search !== undefined)) {
+    // 檢查是否有篩選條件的變更（不包括 page 參數）
+    const hasFilterChanges = Object.keys(newParams).some(key =>
+      key !== 'page' && (key === 'category' || key === 'brand' || key === 'search')
+    );
+
+    if (resetPage && hasFilterChanges) {
       currentParams.set('page', '1');
     }
     navigate(`/products?${currentParams.toString()}`, { replace: true });
