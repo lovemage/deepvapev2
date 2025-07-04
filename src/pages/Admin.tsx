@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
-import { adminAPI, getDashboardStats, uploadImage, getImages } from "@/lib/api";
+import { adminAPI, getDashboardStats, uploadImage, getImages, deleteImage } from "@/lib/api";
 import { useAdminStore, Product } from '@/lib/store';
 import {
   Table,
@@ -163,6 +163,17 @@ const AdminPage: React.FC = () => {
     } finally { setUploading(false); }
   };
   const handleCopyPath = (path: string) => { navigator.clipboard.writeText(path); toast({ title: "路徑已複製" }); };
+  const handleDeleteImage = async (filename: string) => {
+    if (!confirm(`確定要刪除圖片 "${filename}" 嗎？`)) return;
+    try {
+      await deleteImage(filename);
+      toast({ title: "刪除成功", description: `圖片 ${filename} 已刪除` });
+      const imgs = await getImages();
+      setImages(imgs.success ? imgs.images : []);
+    } catch (err: any) {
+      toast({ title: '刪除失敗', description: err.message, variant: 'destructive' });
+    }
+  };
   const createOrUpdate = async (type: 'Product' | 'Coupon' | 'Announcement' | 'Variant', form: any, editingItem: any) => {
     const apiMap = {
       Product: { create: adminAPI.createProduct, update: adminAPI.updateProduct },
@@ -304,14 +315,7 @@ const AdminPage: React.FC = () => {
             <Card><CardHeader><CardTitle>各分類產品數</CardTitle></CardHeader><CardContent><ul className="space-y-2">{dashboardData?.categoryStats?.map(cat => <li key={cat.category} className="flex justify-between items-center"><span className="capitalize">{cat.category}</span><Badge variant="secondary">{cat.count}</Badge></li>)}</ul></CardContent></Card>
             <Card><CardHeader><CardTitle>各品牌產品數</CardTitle></CardHeader><CardContent><ul className="space-y-2">{dashboardData?.brandStats?.map(b => <li key={b.brand} className="flex justify-between items-center"><span>{b.brand}</span><Badge variant="secondary">{b.count}</Badge></li>)}</ul></CardContent></Card>
           </div>
-          <Card>
-            <CardHeader><CardTitle>低庫存警告 (少於10件)</CardTitle></CardHeader>
-            <CardContent>
-              <ScrollArea className="h-48">
-                {dashboardData?.lowStockProducts?.length ? <ul className="space-y-2">{dashboardData.lowStockProducts.map(p => <li key={p.name} className="flex justify-between items-center text-sm"><span>{p.name}</span><Badge variant="destructive">{p.stock} 件</Badge></li>)}</ul> : <p className="text-sm text-muted-foreground">所有產品庫存充足。</p>}
-              </ScrollArea>
-            </CardContent>
-          </Card>
+
         </div>
         <div className="space-y-8">
           <Card>
@@ -322,7 +326,61 @@ const AdminPage: React.FC = () => {
                   <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>{uploading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />上傳中...</> : <><Upload className="mr-2 h-4 w-4" />選擇圖片</>}</Button>
                 </div>
                 <h3 className="font-medium my-4">現有圖片列表</h3>
-                <ScrollArea className="h-72 w-full rounded-md border"><div className="p-4 space-y-2">{images.map(img => <div key={img.name} className="flex items-center justify-between p-2 rounded-md hover:bg-muted"><span className="text-sm font-mono truncate" title={img.name}>{img.name}</span><Button variant="ghost" size="sm" onClick={() => handleCopyPath(img.path)}><Copy className="mr-2 h-4 w-4" /></Button></div>)}</div></ScrollArea>
+                <ScrollArea className="h-96 w-full rounded-md border">
+                  <div className="p-4 space-y-3">
+                    {images.map(img => (
+                      <div key={img.name} className="flex items-center gap-3 p-3 rounded-md border hover:bg-muted">
+                        {/* 圖片預覽 */}
+                        <div className="flex-shrink-0">
+                          <img
+                            src={img.path}
+                            alt={img.name}
+                            className="w-16 h-16 object-cover rounded-md border"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/placeholder.png';
+                            }}
+                          />
+                        </div>
+
+                        {/* 圖片信息 */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-mono truncate" title={img.name}>
+                            {img.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate" title={img.path}>
+                            {img.path}
+                          </p>
+                        </div>
+
+                        {/* 操作按鈕 */}
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyPath(img.path)}
+                            title="複製路徑"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteImage(img.name)}
+                            className="text-destructive hover:text-destructive"
+                            title="刪除圖片"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {images.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        暫無圖片
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
             </CardContent>
           </Card>
         </div>

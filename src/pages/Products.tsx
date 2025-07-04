@@ -53,7 +53,7 @@ const Products: React.FC = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [searchInput, setSearchInput] = useState(searchQuery);
 
-  const updateUrlParams = useCallback((newParams: Record<string, string | null>) => {
+  const updateUrlParams = useCallback((newParams: Record<string, string | null>, resetPage = true) => {
     const currentParams = new URLSearchParams(location.search);
     Object.entries(newParams).forEach(([key, value]) => {
       if (value) {
@@ -62,7 +62,8 @@ const Products: React.FC = () => {
         currentParams.delete(key);
       }
     });
-    if (newParams.category !== undefined || newParams.brand !== undefined || newParams.search !== undefined) {
+    // 只有在篩選條件改變時才重置頁面，分頁操作不重置
+    if (resetPage && (newParams.category !== undefined || newParams.brand !== undefined || newParams.search !== undefined)) {
       currentParams.set('page', '1');
     }
     navigate(`/products?${currentParams.toString()}`, { replace: true });
@@ -125,7 +126,7 @@ const Products: React.FC = () => {
   };
 
   const handlePageChange = (page: number) => {
-    updateUrlParams({ page: page.toString() });
+    updateUrlParams({ page: page.toString() }, false); // 不重置頁面
   };
 
   const resetFilters = () => {

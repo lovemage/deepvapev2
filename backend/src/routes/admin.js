@@ -255,6 +255,26 @@ router.get('/images', authenticateToken, (req, res) => {
   });
 });
 
+// 刪除圖片路由
+router.delete('/images/:filename', authenticateToken, (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, '../../../public/images', filename);
+
+  // 檢查文件是否存在
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ success: false, message: '圖片不存在' });
+  }
+
+  try {
+    // 刪除文件
+    fs.unlinkSync(filePath);
+    res.json({ success: true, message: '圖片刪除成功' });
+  } catch (error) {
+    console.error('刪除圖片失敗:', error);
+    res.status(500).json({ success: false, message: '刪除圖片失敗' });
+  }
+});
+
 // 新增：修改當前登入管理員的密碼
 router.patch('/change-password', authenticateToken, async (req, res) => {
     const { currentPassword, newPassword } = req.body;

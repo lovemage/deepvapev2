@@ -287,7 +287,8 @@ export const adminAPI = {
       'Content-Type': 'multipart/form-data'
     }
   }),
-  getImages: () => api.get('/admin/images')
+  getImages: () => api.get('/admin/images'),
+  deleteImage: (filename: string) => api.delete(`/admin/images/${filename}`)
 };
 
 // 系統設置相關API (公開)
@@ -333,6 +334,15 @@ export async function getImages() {
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || '無法獲取圖片列表');
+  }
+}
+
+export async function deleteImage(filename: string) {
+  try {
+    const response = await api.delete(`/admin/images/${filename}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || '刪除圖片失敗');
   }
 }
 
