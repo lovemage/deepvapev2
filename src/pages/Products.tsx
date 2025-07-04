@@ -72,7 +72,7 @@ const Products: React.FC = () => {
       currentParams.set('page', '1');
     }
     navigate(`/products?${currentParams.toString()}`, { replace: true });
-  }, [navigate, location.search]);
+  }, [navigate]); // 移除 location.search 依賴，避免無限循環
 
   useEffect(() => {
     const loadProducts = async () => {
