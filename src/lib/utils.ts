@@ -7,12 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 
 // 格式化價格
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'TWD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price);
+  // 確保價格是整數，避免顯示小數點
+  const roundedPrice = Math.round(price);
+  return `NT$${roundedPrice.toLocaleString()}`;
 }
 
 // 格式化日期

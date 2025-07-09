@@ -24,6 +24,46 @@ if (process.env.RAILWAY_DEPLOYMENT_ID) {
     }
   }
   
+  // 確保圖片目錄也存在於 Volume 中
+  const volumeImagesDir = '/app/data/images';
+  if (!fs.existsSync(volumeImagesDir)) {
+    try {
+      fs.mkdirSync(volumeImagesDir, { recursive: true });
+      console.log(`📁 [Volume] 創建圖片目錄: ${volumeImagesDir}`);
+      
+      // 複製現有圖片到 Volume（如果存在）
+      const sourceImagesDir = path.join(__dirname, '../../public/images');
+      if (fs.existsSync(sourceImagesDir)) {
+        const copyImages = (src, dest) => {
+          const items = fs.readdirSync(src);
+          items.forEach(item => {
+            const srcPath = path.join(src, item);
+            const destPath = path.join(dest, item);
+            const stat = fs.statSync(srcPath);
+            
+            if (stat.isDirectory()) {
+              if (!fs.existsSync(destPath)) {
+                fs.mkdirSync(destPath, { recursive: true });
+              }
+              copyImages(srcPath, destPath);
+            } else if (stat.isFile() && /\.(jpg|jpeg|png|gif|webp)$/i.test(item)) {
+              if (!fs.existsSync(destPath)) {
+                fs.copyFileSync(srcPath, destPath);
+                console.log(`📷 複製圖片: ${item}`);
+              }
+            }
+          });
+        };
+        
+        console.log('📋 開始複製圖片到 Volume...');
+        copyImages(sourceImagesDir, volumeImagesDir);
+        console.log('✅ 圖片複製完成');
+      }
+    } catch (error) {
+      console.error(`❌ [Volume] 創建或複製圖片失敗: ${error.message}`);
+    }
+  }
+  
   // 如果設置了 FORCE_DB_OVERWRITE，則強制從 repo 複製
   if (process.env.FORCE_DB_OVERWRITE === 'true' && fs.existsSync(sourceDbPath)) {
     try {

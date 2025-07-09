@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" fill="#7c3aed"/>
+  <path d="M256 120c-30.9 0-56 25.1-56 56v80c0 30.9 25.1 56 56 56s56-25.1 56-56v-80c0-30.9-25.1-56-56-56zm24 136c0 13.3-10.7 24-24 24s-24-10.7-24-24v-80c0-13.3 10.7-24 24-24s24 10.7 24 24v80z" fill="white"/>
+  <rect x="240" y="312" width="32" height="80" rx="8" fill="white"/>
+  <circle cx="256" cy="176" r="12" fill="white" opacity="0.8"/>
+  <text x="256" y="460" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">DEEPVAPE</text>
+</svg>

@@ -34,9 +34,13 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 靜態文件服務
+// 靜態文件服務 - Railway Volume 兼容
+const imagesDir = process.env.RAILWAY_DEPLOYMENT_ID 
+  ? '/app/data/images'  // Railway 生產環境：使用 Volume
+  : path.join(__dirname, '../../public/images');  // 本地開發環境
+
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-app.use('/images', express.static(path.join(__dirname, '../../public/images')));
+app.use('/images', express.static(imagesDir));
 
 // 生產環境下服務前端靜態文件
 if (NODE_ENV === 'production') {

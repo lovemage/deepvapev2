@@ -9,12 +9,15 @@ const path = require('path');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'vape-store-secret-key';
 
-// 圖片上傳目錄
-const uploadDir = path.join(__dirname, '../../../public/images');
+// 圖片上傳目錄 - Railway Volume 兼容
+const uploadDir = process.env.RAILWAY_DEPLOYMENT_ID 
+  ? '/app/data/images'  // Railway 生產環境：使用 Volume
+  : path.join(__dirname, '../../../public/images');  // 本地開發環境
 
 // 確保目錄存在
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+  console.log(`📁 創建圖片上傳目錄: ${uploadDir}`);
 }
 
 // Multer 配置
@@ -231,7 +234,9 @@ router.post('/upload-image', authenticateToken, upload.single('image'), (req, re
 
 // 獲取圖片列表路由
 router.get('/images', authenticateToken, (req, res) => {
-  const imagesDir = path.join(__dirname, '../../../public/images');
+  const imagesDir = process.env.RAILWAY_DEPLOYMENT_ID 
+    ? '/app/data/images'
+    : path.join(__dirname, '../../../public/images');
   fs.readdir(imagesDir, (err, files) => {
     if (err) {
       console.error('無法讀取圖片目錄:', err);
@@ -258,7 +263,10 @@ router.get('/images', authenticateToken, (req, res) => {
 // 刪除圖片路由
 router.delete('/images/:filename', authenticateToken, (req, res) => {
   const filename = req.params.filename;
-  const filePath = path.join(__dirname, '../../../public/images', filename);
+  const baseDir = process.env.RAILWAY_DEPLOYMENT_ID 
+    ? '/app/data/images'
+    : path.join(__dirname, '../../../public/images');
+  const filePath = path.join(baseDir, filename);
 
   // 檢查文件是否存在
   if (!fs.existsSync(filePath)) {

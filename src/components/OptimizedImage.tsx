@@ -72,7 +72,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         src={src}
         alt={alt}
         className={cn(
-          "w-full h-full object-cover",
+          "w-full h-full object-contain",
           isLoading && "opacity-0",
           !isLoading && "opacity-100 transition-opacity duration-300"
         )}

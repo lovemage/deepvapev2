@@ -253,7 +253,7 @@ const ProductDetail: React.FC = () => {
               <span className="text-3xl font-bold text-gray-900">
                 {formatPrice(getCurrentPrice())}
               </span>
-              {selectedVariant?.price_modifier && selectedVariant.price_modifier > 0 && (
+              {selectedVariant?.price_modifier > 0 && (
                 <span className="text-lg text-gray-500 line-through">
                   {formatPrice(product.price)}
                 </span>
