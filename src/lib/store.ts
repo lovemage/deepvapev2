@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 export interface Product {
   id: number;
   name: string;
-  category: 'host' | 'cartridge' | 'disposable';
+  category: 'host' | 'cartridge' | 'disposable' | 'oil';
   brand: string;
   price: number;
   description: string;

@@ -403,7 +403,7 @@ router.post('/products', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: '缺少必要參數' });
     }
     
-    const validCategories = ['host', 'cartridge', 'disposable'];
+    const validCategories = ['host', 'cartridge', 'disposable', 'oil'];
     if (!validCategories.includes(category)) {
       return res.status(400).json({ error: '產品類別無效' });
     }
@@ -433,7 +433,7 @@ router.put('/products/:id', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: '缺少必要參數' });
     }
     
-    const validCategories = ['host', 'cartridge', 'disposable'];
+    const validCategories = ['host', 'cartridge', 'disposable', 'oil'];
     if (!validCategories.includes(category)) {
       return res.status(400).json({ error: '產品類別無效' });
     }

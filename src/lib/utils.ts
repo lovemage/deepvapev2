@@ -26,7 +26,8 @@ export function formatDate(dateString: string): string {
 export const categoryMap = {
   host: '主機',
   cartridge: '煙彈',
-  disposable: '拋棄式'
+  disposable: '拋棄式',
+  oil: '煙油'
 }
 
 // 獲取分類中文名稱

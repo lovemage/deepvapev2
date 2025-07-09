@@ -132,6 +132,12 @@ router.get('/sitemap-data', async (req, res) => {
         category: 'products'
       },
       { 
+        title: '煙油', 
+        url: '/products?category=oil', 
+        description: '各種口味煙油選擇',
+        category: 'products'
+      },
+      { 
         title: '配送說明', 
         url: '/shipping', 
         description: '配送方式和注意事項',
