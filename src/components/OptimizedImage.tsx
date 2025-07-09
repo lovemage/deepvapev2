@@ -11,6 +11,7 @@ interface OptimizedImageProps {
   width?: number;
   height?: number;
   onError?: () => void;
+  objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -23,6 +24,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   width,
   height,
   onError,
+  objectFit = 'contain',
 }) => {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,7 +74,12 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         src={src}
         alt={alt}
         className={cn(
-          "w-full h-full object-contain",
+          "w-full h-full",
+          objectFit === 'contain' && "object-contain",
+          objectFit === 'cover' && "object-cover",
+          objectFit === 'fill' && "object-fill",
+          objectFit === 'none' && "object-none",
+          objectFit === 'scale-down' && "object-scale-down",
           isLoading && "opacity-0",
           !isLoading && "opacity-100 transition-opacity duration-300"
         )}

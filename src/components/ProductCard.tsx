@@ -36,10 +36,11 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) => {
           <OptimizedImage
             src={imageUrl}
             alt={product.name}
-            className="w-full h-48 group-hover:scale-105 transition-transform duration-300"
+            className="w-full aspect-[4/3] group-hover:scale-105 transition-transform duration-300"
             width={320}
-            height={192}
+            height={240}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            objectFit="cover"
           />
           
           {/* Overlay Buttons */}

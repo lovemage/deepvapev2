@@ -278,34 +278,52 @@ const Home: React.FC = () => {
 
       {/* Age Verification Modal */}
       <Dialog open={showAgeVerification} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center">年齡驗證</DialogTitle>
-          </DialogHeader>
-          <div className="text-center py-6">
-            <div className="w-16 h-16 mx-auto mb-4">
-              <img 
-                src="/images/age_verification_icon.png" 
-                alt="年齡驗證" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <p className="text-gray-600 mb-6">
-              本網站銷售的商品僅供18歲以上人士使用
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Button 
-                onClick={() => handleAgeConfirm(true)}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                我已滿18歲
-              </Button>
-              <Button 
-                onClick={() => handleAgeConfirm(false)}
-                variant="outline"
-              >
-                我未滿18歲
-              </Button>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-[#c8302e]">
+          <div className="relative">
+            <img 
+              src="/dpprompt.png" 
+              alt="DEEPVAPE NEW OPEN 優惠" 
+              className="w-full h-auto"
+            />
+            <div className="p-6 bg-white">
+              <p className="text-gray-700 text-center mb-4 font-medium">
+                未滿18歲禁止進入
+              </p>
+              <div className="bg-gray-100 rounded-lg p-4 mb-4">
+                <p className="text-sm text-gray-600 mb-2 text-center">優惠碼</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value="DEEP2025"
+                    readOnly
+                    className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-center font-bold text-lg"
+                  />
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText('DEEP2025');
+                      alert('優惠碼已複製！');
+                    }}
+                    className="bg-[#c8302e] hover:bg-[#a02825] text-white"
+                  >
+                    複製
+                  </Button>
+                </div>
+              </div>
+              <div className="flex gap-4 justify-center">
+                <Button 
+                  onClick={() => handleAgeConfirm(true)}
+                  className="bg-[#c8302e] hover:bg-[#a02825] text-white px-6"
+                >
+                  我已滿18歲
+                </Button>
+                <Button 
+                  onClick={() => handleAgeConfirm(false)}
+                  variant="outline"
+                  className="border-[#c8302e] text-[#c8302e] hover:bg-[#c8302e] hover:text-white px-6"
+                >
+                  我未滿18歲
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
