@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from "@/hooks/use-toast";
@@ -8,16 +8,26 @@ import Footer from '@/components/layout/Footer';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
 import FloatingCartButton from '@/components/FloatingCartButton';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import Home from '@/pages/Home';
-import Products from '@/pages/Products';
-import ProductDetail from '@/pages/ProductDetail';
-import Cart from '@/pages/Cart';
-import Checkout from '@/pages/Checkout';
-import Admin from '@/pages/Admin';
-import Shipping from '@/pages/Shipping';
-import Returns from '@/pages/Returns';
-import Sitemap from '@/pages/Sitemap';
 import './App.css';
+
+// 使用 React.lazy 進行代碼分割
+const Home = lazy(() => import('@/pages/Home'));
+const Products = lazy(() => import('@/pages/Products'));
+const ProductDetail = lazy(() => import('@/pages/ProductDetail'));
+const Cart = lazy(() => import('@/pages/Cart'));
+const Checkout = lazy(() => import('@/pages/Checkout'));
+const Admin = lazy(() => import('@/pages/Admin'));
+const Shipping = lazy(() => import('@/pages/Shipping'));
+const Returns = lazy(() => import('@/pages/Returns'));
+const Sitemap = lazy(() => import('@/pages/Sitemap'));
+const FAQ = lazy(() => import('@/pages/FAQ'));
+
+// 載入中組件
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  </div>
+);
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -59,17 +69,20 @@ function App() {
         <AnnouncementBanner />
         <main className="flex-grow">
           <ErrorBoundary>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:id" element={<ProductDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/shipping" element={<Shipping />} />
-              <Route path="/returns" element={<Returns />} />
-              <Route path="/sitemap" element={<Sitemap />} />
-            </Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/products/:id" element={<ProductDetail />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/shipping" element={<Shipping />} />
+                <Route path="/returns" element={<Returns />} />
+                <Route path="/sitemap" element={<Sitemap />} />
+                <Route path="/faq" element={<FAQ />} />
+              </Routes>
+            </Suspense>
           </ErrorBoundary>
         </main>
         <Footer />

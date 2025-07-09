@@ -18,6 +18,7 @@ router.get('/sitemap.xml', async (req, res) => {
       { url: '/products?category=disposable', priority: '0.8', changefreq: 'weekly' },
       { url: '/shipping', priority: '0.6', changefreq: 'monthly' },
       { url: '/returns', priority: '0.6', changefreq: 'monthly' },
+      { url: '/faq', priority: '0.7', changefreq: 'weekly' },
       { url: '/sitemap', priority: '0.5', changefreq: 'monthly' }
     ];
 
@@ -54,10 +55,18 @@ router.get('/sitemap.xml', async (req, res) => {
     products.forEach(product => {
       const lastmod = product.updated_at || product.created_at;
       const formattedDate = new Date(lastmod).toISOString().split('T')[0];
+      // 生成 SEO 友善的 URL
+      const slug = product.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s\u4e00-\u9fa5-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
       
       sitemap += `
   <url>
-    <loc>${baseUrl}/products/${product.id}</loc>
+    <loc>${baseUrl}/products/${slug}-${product.id}</loc>
     <lastmod>${formattedDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

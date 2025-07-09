@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ProductCard from '@/components/ProductCard';
-import SEO, { createOrganizationStructuredData } from '@/components/SEO';
+import SEO, { createOrganizationStructuredData, createSearchBoxStructuredData } from '@/components/SEO';
 import { useProductStore, useSettingsStore } from '@/lib/store';
 import { productsAPI, settingsAPI } from '@/lib/api';
 import { getCategoryName } from '@/lib/utils';
@@ -110,7 +110,10 @@ const Home: React.FC = () => {
         description="DeepVape 是台灣專業的電子煙線上商城，提供各大品牌電子煙主機、煙彈、拋棄式電子煙。正品保證，快速配送，優質售後服務。"
         keywords="電子煙,電子煙主機,煙彈,拋棄式電子煙,IQOS,JUUL,Vaporesso,SP2,Ilia,HTA,Lana,台灣電子煙,電子煙商城"
         url="/"
-        structuredData={createOrganizationStructuredData()}
+        structuredData={{
+          ...createOrganizationStructuredData(),
+          ...createSearchBoxStructuredData()
+        }}
       />
       {/* Hero Section */}
       <section 

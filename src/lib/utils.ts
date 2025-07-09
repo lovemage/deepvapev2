@@ -197,3 +197,26 @@ export function handleApiError(error: any): string {
   
   return '發生未知錯誤，請稍後再試'
 }
+
+// 生成 SEO 友善的 URL slug
+export function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s\u4e00-\u9fa5-]/g, '') // 保留中文字符
+    .replace(/\s+/g, '-') // 空格替換為連字符
+    .replace(/-+/g, '-') // 多個連字符替換為單個
+    .replace(/^-+|-+$/g, ''); // 移除開頭和結尾的連字符
+}
+
+// 從產品生成 SEO 友善的 URL
+export function generateProductUrl(product: { id: number; name: string }): string {
+  const slug = generateSlug(product.name);
+  return `/products/${slug}-${product.id}`;
+}
+
+// 從 URL 提取產品 ID
+export function extractProductIdFromUrl(url: string): string | null {
+  const match = url.match(/-(\d+)$/);
+  return match ? match[1] : null;
+}

@@ -33,6 +33,25 @@
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   
+  <!-- 資源預載入 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://deepvape.org">
+  
+  <!-- 預載入關鍵資源 -->
+  <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/images/hero-background.webp" as="image" type="image/webp">
+  
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="DeepVape" />
+  <link rel="apple-touch-icon" href="/icon-152x152.png" />
+  <meta name="msapplication-TileImage" content="/icon-144x144.png" />
+  <meta name="msapplication-TileColor" content="#7c3aed" />
+  
   <!-- Structured Data -->
   <script type="application/ld+json">
   {
@@ -61,6 +80,21 @@
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('Service Worker registered:', registration);
+          })
+          .catch(error => {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
 </body>
 
 </html>
