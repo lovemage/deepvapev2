@@ -329,45 +329,46 @@ const AdminPage: React.FC = () => {
                 <ScrollArea className="h-96 w-full rounded-md border">
                   <div className="p-4 space-y-3">
                     {images.map(img => (
-                      <div key={img.name} className="flex items-center gap-3 p-3 rounded-md border hover:bg-muted">
-                        {/* 圖片預覽 */}
-                        <div className="flex-shrink-0">
-                          <img
-                            src={img.path}
-                            alt={img.name}
-                            className="w-16 h-16 object-cover rounded-md border"
-                            onError={(e) => {
-                              e.currentTarget.src = '/images/placeholder.png';
-                            }}
-                          />
+                      <div key={img.name} className="p-3 rounded-md border hover:bg-muted space-y-3">
+                        {/* 上方：圖片預覽和信息 */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            <img
+                              src={img.path}
+                              alt={img.name}
+                              className="w-16 h-16 object-cover rounded-md border"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/placeholder.png';
+                              }}
+                            />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-mono truncate" title={img.name}>
+                              {img.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate" title={img.path}>
+                              {img.path}
+                            </p>
+                          </div>
                         </div>
 
-                        {/* 圖片信息 */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-mono truncate" title={img.name}>
-                            {img.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate" title={img.path}>
-                            {img.path}
-                          </p>
-                        </div>
-
-                        {/* 操作按鈕 */}
-                        <div className="flex gap-1">
+                        {/* 下方：操作按鈕 */}
+                        <div className="flex gap-2 pt-2 border-t border-gray-100">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleCopyPath(img.path)}
-                            title="複製路徑"
+                            className="flex-1"
                           >
-                            <Copy className="h-4 w-4" />
+                            <Copy className="mr-2 h-4 w-4" />
+                            複製路徑
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleDeleteImage(img.name)}
                             className="text-destructive hover:text-destructive"
-                            title="刪除圖片"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
