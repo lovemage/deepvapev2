@@ -50,7 +50,7 @@ const Home: React.FC = () => {
     try {
       setLoading(true);
       // 獲取每個分類的推薦產品
-      const categories = ['host', 'cartridge', 'disposable'];
+      const categories = ['host', 'cartridge', 'disposable', 'oil'];
       const promises = categories.map(category =>
         productsAPI.getProducts({ category, limit: 4 })
       );

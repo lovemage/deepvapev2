@@ -399,7 +399,7 @@ const AdminPage: React.FC = () => {
     <form onSubmit={async e => {e.preventDefault(); if (await createOrUpdate('Product', productForm, editingProduct)) {setEditingProduct(null); setProductForm({});}}} className="space-y-4">
       <Input placeholder="名稱" value={productForm.name || ''} onChange={e => setProductForm({...productForm, name: e.target.value})} required/>
       <Input placeholder="品牌" value={productForm.brand || ''} onChange={e => setProductForm({...productForm, brand: e.target.value})} required/>
-      <Select value={productForm.category || ''} onValueChange={(v: any) => setProductForm({...productForm, category: v})}><SelectTrigger><SelectValue placeholder="分類" /></SelectTrigger><SelectContent><SelectItem value="host">主機</SelectItem><SelectItem value="cartridge">煙彈</SelectItem><SelectItem value="disposable">拋棄式</SelectItem></SelectContent></Select>
+      <Select value={productForm.category || ''} onValueChange={(v: any) => setProductForm({...productForm, category: v})}><SelectTrigger><SelectValue placeholder="分類" /></SelectTrigger><SelectContent><SelectItem value="host">主機</SelectItem><SelectItem value="cartridge">煙彈</SelectItem><SelectItem value="disposable">拋棄式</SelectItem><SelectItem value="oil">煙油</SelectItem></SelectContent></Select>
       <Input type="number" placeholder="價格" value={productForm.price || ''} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} required/>
       <Input type="number" placeholder="庫存" value={productForm.stock || ''} onChange={e => setProductForm({...productForm, stock: Number(e.target.value)})} required/>
       <Input placeholder="圖片 URL" value={productForm.image_url || ''} onChange={e => setProductForm({...productForm, image_url: e.target.value})} />
