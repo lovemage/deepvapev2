@@ -75,11 +75,11 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         alt={alt}
         className={cn(
           "w-full h-full",
-          objectFit === 'contain' && "object-contain",
-          objectFit === 'cover' && "object-cover",
+          objectFit === 'contain' && "object-contain object-center",
+          objectFit === 'cover' && "object-cover object-center",
           objectFit === 'fill' && "object-fill",
-          objectFit === 'none' && "object-none",
-          objectFit === 'scale-down' && "object-scale-down",
+          objectFit === 'none' && "object-none object-center",
+          objectFit === 'scale-down' && "object-scale-down object-center",
           isLoading && "opacity-0",
           !isLoading && "opacity-100 transition-opacity duration-300"
         )}

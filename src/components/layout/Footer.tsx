@@ -55,6 +55,11 @@ const Footer: React.FC = () => {
                   拋棄式電子煙
                 </Link>
               </li>
+              <li>
+                <Link to="/products?category=oil" className="text-sm hover:text-white transition-colors">
+                  煙油
+                </Link>
+              </li>
             </ul>
           </div>
 

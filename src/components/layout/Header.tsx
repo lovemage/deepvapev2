@@ -53,6 +53,7 @@ const Header: React.FC = () => {
     { label: '主機 (Vape)', category: 'host' },
     { label: '煙彈 (Pods)', category: 'cartridge' },
     { label: '拋棄式 (Disposable)', category: 'disposable' },
+    { label: '煙油 (E-Liquid)', category: 'oil' },
   ];
 
   return (

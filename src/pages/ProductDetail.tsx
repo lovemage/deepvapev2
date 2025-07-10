@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Product, ProductVariant } from '@/lib/store';
 import { formatPrice, getCategoryName, getStockStatus, getImageUrl } from '@/lib/utils';
@@ -199,16 +199,17 @@ const ProductDetail: React.FC = () => {
         <div className="space-y-4">
           <Card className="overflow-hidden">
             <div 
-              className="relative bg-gray-100 cursor-pointer group"
+              className="relative bg-gray-100 cursor-pointer group flex items-center justify-center"
               onClick={() => setIsImageZoomOpen(true)}
             >
               <OptimizedImage
                 src={getImageUrl(product.image_url)}
                 alt={product.name}
-                className="w-full h-96"
+                className="w-full h-96 md:h-[500px]"
                 width={640}
                 height={384}
                 sizes="(max-width: 1024px) 100vw, 50vw"
+                objectFit="cover"
                 priority
               />
               
@@ -399,16 +400,22 @@ const ProductDetail: React.FC = () => {
       
       {/* Image Zoom Dialog */}
       <Dialog open={isImageZoomOpen} onOpenChange={setIsImageZoomOpen}>
-        <DialogContent className="max-w-4xl w-full p-0 overflow-hidden">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 overflow-hidden flex items-center justify-center">
+          <DialogTitle className="sr-only">
+            {product.name} - 圖片放大檢視
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            點擊關閉按鈕或按ESC鍵關閉圖片放大檢視
+          </DialogDescription>
           <DialogClose className="absolute right-4 top-4 z-10 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
             <X className="h-6 w-6 text-white drop-shadow-lg" />
             <span className="sr-only">Close</span>
           </DialogClose>
-          <div className="relative bg-gray-100">
+          <div className="relative bg-gray-100 flex items-center justify-center w-full h-full min-h-[60vh] max-h-[90vh]">
             <OptimizedImage
               src={getImageUrl(product.image_url)}
               alt={product.name}
-              className="w-full h-auto max-h-[90vh]"
+              className="max-w-full max-h-full w-auto h-auto"
               objectFit="contain"
               width={1200}
               height={800}
