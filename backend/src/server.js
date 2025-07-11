@@ -44,7 +44,33 @@ app.use('/images', express.static(imagesDir));
 
 // 生產環境下服務前端靜態文件
 if (NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../../dist')));
+  // 設置正確的 MIME 類型
+  express.static.mime.define({
+    'application/javascript': ['js'],
+    'text/javascript': ['js'],
+    'application/json': ['json'],
+    'text/css': ['css'],
+    'image/png': ['png'],
+    'image/jpeg': ['jpg', 'jpeg'],
+    'image/webp': ['webp'],
+    'image/svg+xml': ['svg'],
+    'font/woff2': ['woff2'],
+    'font/woff': ['woff']
+  });
+
+  app.use(express.static(path.join(__dirname, '../../dist'), {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (path.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (path.endsWith('.woff2')) {
+        res.setHeader('Content-Type', 'font/woff2');
+      } else if (path.endsWith('.webp')) {
+        res.setHeader('Content-Type', 'image/webp');
+      }
+    }
+  }));
 }
 
 // API路由
