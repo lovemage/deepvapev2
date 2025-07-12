@@ -1,0 +1,16 @@
+[start]
+cmd = "cd backend && npm start"
+
+[phases.setup]
+dependsOn = ['...']
+
+[phases.build]
+dependsOn = ['setup']
+cmds = [
+    'npm install',
+    'npm run build:frontend',
+    'cd backend && npm install --production'
+]
+
+[phases.deploy]
+dependsOn = ['build'] 
