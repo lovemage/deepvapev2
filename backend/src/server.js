@@ -58,16 +58,25 @@ if (NODE_ENV === 'production') {
     'font/woff': ['woff']
   });
 
+  // 靜態文件中間件 - 處理構建後的文件
   app.use(express.static(path.join(__dirname, '../../dist'), {
-    setHeaders: (res, path) => {
-      if (path.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      } else if (path.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (path.endsWith('.woff2')) {
+    maxAge: '1d', // 設置緩存
+    etag: true,
+    setHeaders: (res, filePath) => {
+      // 確保正確的 MIME 類型
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      } else if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      } else if (filePath.endsWith('.woff2')) {
         res.setHeader('Content-Type', 'font/woff2');
-      } else if (path.endsWith('.webp')) {
+      } else if (filePath.endsWith('.webp')) {
         res.setHeader('Content-Type', 'image/webp');
+      }
+      
+      // 對於 assets 目錄下的文件設置較長的緩存
+      if (filePath.includes('/assets/')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       }
     }
   }));
@@ -145,8 +154,25 @@ if (NODE_ENV === 'production') {
       });
     }
     
+    // 如果是靜態資源請求（assets, 圖片等），但文件不存在，返回404
+    if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|webp|svg|woff|woff2|ttf|eot|ico|json)$/)) {
+      return res.status(404).send('File not found');
+    }
+    
+    // 檢查是否是 assets 目錄下的請求
+    if (req.path.startsWith('/assets/')) {
+      return res.status(404).send('Asset not found');
+    }
+    
     // 其他路由返回前端應用
-    res.sendFile(path.join(__dirname, '../../dist/index.html'));
+    const indexPath = path.join(__dirname, '../../dist/index.html');
+    
+    // 確保 index.html 存在
+    if (!require('fs').existsSync(indexPath)) {
+      return res.status(500).send('Application not properly deployed');
+    }
+    
+    res.sendFile(indexPath);
   });
 } else {
   // 開發環境的根路由

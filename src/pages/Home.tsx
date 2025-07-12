@@ -16,6 +16,7 @@ const Home: React.FC = () => {
   const { setSelectedCategory } = useProductStore();
   const { loadSettings: loadDisplaySettings } = useSettingsStore();
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [heroImageUrl, setHeroImageUrl] = useState('/images/itay-kabalo-b3sel60dv8a-unsplash.jpg');
@@ -28,6 +29,7 @@ const Home: React.FC = () => {
       setShowAgeVerification(true);
     }
     loadFeaturedProducts();
+    loadBrands();
     loadSettings();
   }, []);
 
@@ -43,6 +45,17 @@ const Home: React.FC = () => {
     } catch (error) {
       console.warn('載入系統設置失敗，使用默認設置:', error.message);
       // 使用默認圖片，不影響頁面加載
+    }
+  };
+
+  const loadBrands = async () => {
+    try {
+      const response = await productsAPI.getBrands();
+      // 排序品牌，按產品數量降序
+      const sortedBrands = response.data.sort((a, b) => b.count - a.count);
+      setBrands(sortedBrands);
+    } catch (error) {
+      console.error('載入品牌失敗:', error);
     }
   };
 
@@ -63,6 +76,10 @@ const Home: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBrandClick = (brand: string) => {
+    navigate(`/products?brand=${encodeURIComponent(brand)}`);
   };
 
   const handleAgeConfirm = (isAdult: boolean) => {
@@ -165,6 +182,25 @@ const Home: React.FC = () => {
               精選熱門商品，為您推薦最受歡迎的電子煙產品
             </p>
           </div>
+
+          {/* 品牌標籤 */}
+          {brands.length > 0 && (
+            <div className="mb-8">
+              <div className="flex flex-wrap gap-2 justify-center">
+                {brands.map((brand) => (
+                  <Badge
+                    key={brand.brand}
+                    variant="secondary"
+                    className="cursor-pointer hover:bg-purple-100 transition-colors text-sm px-4 py-2"
+                    onClick={() => handleBrandClick(brand.brand)}
+                  >
+                    {brand.brand}
+                    <span className="ml-1 text-xs opacity-75">({brand.count})</span>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">

@@ -33,6 +33,10 @@ export default defineConfig({
         main: path.resolve(__dirname, 'index.html'),
       },
       output: {
+        // 確保資源文件名包含哈希
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: {
           // 將 React 相關庫分離
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
