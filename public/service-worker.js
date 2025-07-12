@@ -1,10 +1,18 @@
-const CACHE_NAME = 'deepvape-v1';
+const CACHE_NAME = 'deepvape-v2'; // 更新版本號
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
   '/robots.txt',
-  '/sitemap.xml'
+  '/sitemap.xml',
+  '/offline.html'
+];
+
+// 需要預緩存的靜態資源
+const staticAssets = [
+  '/icon-192x192.png',
+  '/icon-512x512.png',
+  '/images/itay-kabalo-b3sel60dv8a-unsplash.jpg'
 ];
 
 // 安裝 Service Worker
@@ -13,7 +21,14 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        // 先緩存必要的頁面
+        return cache.addAll(urlsToCache)
+          .then(() => {
+            // 然後嘗試緩存靜態資源（失敗不影響安裝）
+            return cache.addAll(staticAssets).catch(err => {
+              console.warn('Some static assets failed to cache:', err);
+            });
+          });
       })
   );
   // 強制更新
@@ -45,52 +60,115 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 跳過 API 請求（不緩存動態數據）
-  if (event.request.url.includes('/api/')) {
+  // 跳過非 HTTP/HTTPS 協議的請求（如 chrome-extension://）
+  if (!event.request.url.startsWith('http://') && !event.request.url.startsWith('https://')) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // 如果緩存中有響應，返回緩存
-        if (response) {
-          return response;
-        }
+  // 解析 URL
+  const { pathname } = new URL(event.request.url);
 
-        // 否則進行網絡請求
-        return fetch(event.request).then(response => {
-          // 檢查是否是有效響應
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+  // API 請求 - 使用 Network Only 策略
+  if (pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // 靜態資源 - 使用 Cache First 策略
+  if (pathname.includes('/assets/') || 
+      pathname.endsWith('.js') || 
+      pathname.endsWith('.css') ||
+      pathname.endsWith('.png') ||
+      pathname.endsWith('.jpg') ||
+      pathname.endsWith('.jpeg') ||
+      pathname.endsWith('.webp') ||
+      pathname.endsWith('.woff2') ||
+      pathname.endsWith('.woff')) {
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => {
+          if (response) {
+            // 在後台更新緩存（Stale While Revalidate）
+            const fetchPromise = fetch(event.request)
+              .then(networkResponse => {
+                if (networkResponse && networkResponse.status === 200) {
+                  const responseToCache = networkResponse.clone();
+                  caches.open(CACHE_NAME)
+                    .then(cache => {
+                      cache.put(event.request, responseToCache);
+                    })
+                    .catch(error => {
+                      console.warn('Cache update failed:', error);
+                    });
+                }
+                return networkResponse;
+              })
+              .catch(() => undefined);
+            
             return response;
           }
+          
+          // 如果緩存中沒有，從網絡獲取並緩存
+          return fetch(event.request)
+            .then(response => {
+              if (!response || response.status !== 200 || response.type !== 'basic') {
+                return response;
+              }
 
-          // 克隆響應
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME)
+                .then(cache => {
+                  cache.put(event.request, responseToCache);
+                })
+                .catch(error => {
+                  console.warn('Cache put failed:', error);
+                });
+
+              return response;
+            });
+        })
+    );
+    return;
+  }
+
+  // HTML 頁面 - 使用 Network First 策略
+  if (event.request.mode === 'navigate' || pathname === '/' || pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (!response || response.status !== 200) {
+            throw new Error('Network response was not ok');
+          }
+          
           const responseToCache = response.clone();
-
-          // 將響應添加到緩存
           caches.open(CACHE_NAME)
             .then(cache => {
-              // 只緩存靜態資源
-              if (event.request.url.includes('/assets/') || 
-                  event.request.url.includes('.js') || 
-                  event.request.url.includes('.css') ||
-                  event.request.url.includes('.png') ||
-                  event.request.url.includes('.jpg') ||
-                  event.request.url.includes('.webp')) {
-                cache.put(event.request, responseToCache);
-              }
+              cache.put(event.request, responseToCache);
+            })
+            .catch(error => {
+              console.warn('Cache put failed:', error);
             });
-
+          
           return response;
-        });
-      })
-      .catch(() => {
-        // 離線時返回離線頁面
-        if (event.request.destination === 'document') {
-          return caches.match('/offline.html');
-        }
-      })
+        })
+        .catch(() => {
+          // 網絡失敗時使用緩存
+          return caches.match(event.request)
+            .then(response => {
+              if (response) {
+                return response;
+              }
+              // 如果沒有緩存，返回離線頁面
+              return caches.match('/offline.html');
+            });
+        })
+    );
+    return;
+  }
+
+  // 其他請求 - 使用默認策略
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
   );
 });
 
