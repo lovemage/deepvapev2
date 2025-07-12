@@ -31,7 +31,7 @@ const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ className = '' 
 
   const handleLineClick = () => {
     // 開啟 Line 聯絡方式
-    window.open('https://line.me/ti/p/@deepvape', '_blank');
+    window.open('https://line.me/ti/p/euNh8K-s3e', '_blank');
   };
 
   return (
