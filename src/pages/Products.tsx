@@ -24,6 +24,7 @@ import SEO, { createBreadcrumbStructuredData } from '@/components/SEO';
 import { useProductStore } from '@/lib/store';
 import { productsAPI } from '@/lib/api';
 import { getCategoryName, debounce } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 const Products: React.FC = () => {
   const location = useLocation();
@@ -378,6 +379,38 @@ const Products: React.FC = () => {
           </Sheet>
         </div>
       </div>
+
+      {/* 品牌標籤 */}
+      {brands.length > 0 && (
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2">
+            <Badge
+              variant={!selectedBrand ? "default" : "outline"}
+              className={!selectedBrand 
+                ? "cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all text-sm px-4 py-2 border-0"
+                : "cursor-pointer hover:bg-gray-100 transition-colors text-sm px-4 py-2"
+              }
+              onClick={() => handleBrandChange('')}
+            >
+              全部品牌
+            </Badge>
+            {brands.map((brand) => (
+              <Badge
+                key={brand.brand}
+                variant={selectedBrand === brand.brand ? "default" : "outline"}
+                className={selectedBrand === brand.brand
+                  ? "cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all text-sm px-4 py-2 border-0"
+                  : "cursor-pointer hover:bg-gray-100 transition-colors text-sm px-4 py-2"
+                }
+                onClick={() => handleBrandChange(brand.brand)}
+              >
+                {brand.brand}
+                <span className="ml-1 text-xs opacity-90">({brand.count})</span>
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-8">
         <div className="hidden md:block w-64 flex-shrink-0">

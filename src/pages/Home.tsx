@@ -191,11 +191,11 @@ const Home: React.FC = () => {
                   <Badge
                     key={brand.brand}
                     variant="secondary"
-                    className="cursor-pointer hover:bg-purple-100 transition-colors text-sm px-4 py-2"
+                    className="cursor-pointer bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 transition-all text-sm px-4 py-2 border-0"
                     onClick={() => handleBrandClick(brand.brand)}
                   >
                     {brand.brand}
-                    <span className="ml-1 text-xs opacity-75">({brand.count})</span>
+                    <span className="ml-1 text-xs opacity-90">({brand.count})</span>
                   </Badge>
                 ))}
               </div>
