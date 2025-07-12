@@ -34,6 +34,7 @@ router.get('/', async (req, res) => {
       params.push(`%${search}%`, `%${search}%`);
     }
     
+    // 固定使用 created_at DESC 排序，確保管理員調整的順序生效
     sql += ' ORDER BY p.created_at DESC';
     
     // 分頁

@@ -25,7 +25,11 @@ import {
   Trash2,
   Pencil,
   PlusCircle,
-  ChevronRight
+  ChevronRight,
+  ArrowUp,
+  ArrowDown,
+  MoveVertical,
+  Save
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
@@ -105,13 +109,17 @@ const AdminPage: React.FC = () => {
     newPassword: '',
     confirmPassword: '',
   });
+  const [productSortBy, setProductSortBy] = useState('created_at');
+  const [productSortOrder, setProductSortOrder] = useState('desc');
+  const [isReordering, setIsReordering] = useState(false);
+  const [reorderProducts, setReorderProducts] = useState<Product[]>([]);
 
   // --- Data Fetching & Auth ---
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
       const [stats, imgs, prods, coups, ancs, adms, sets] = await Promise.all([
-        getDashboardStats(), getImages(), adminAPI.getProducts({ limit: 1000 }),
+        getDashboardStats(), getImages(), adminAPI.getProducts({ limit: 1000, sort: productSortBy, order: productSortOrder }),
         adminAPI.getCoupons(), adminAPI.getAnnouncements(), adminAPI.getAdmins(), adminAPI.getSettings()
       ]);
       setDashboardData(stats);
@@ -126,7 +134,7 @@ const AdminPage: React.FC = () => {
       setError(err.message || '載入資料時發生錯誤');
       if (err.response?.status === 401) { logout(); navigate('/admin'); }
     } finally { setLoading(false); }
-  }, [isAuthenticated, logout, navigate]);
+  }, [isAuthenticated, logout, navigate, productSortBy, productSortOrder]);
   
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -135,7 +143,7 @@ const AdminPage: React.FC = () => {
     } else { setLoading(false); }
   }, []);
 
-  useEffect(() => { if (isAuthenticated) fetchAllData(); }, [isAuthenticated]);
+  useEffect(() => { if (isAuthenticated) fetchAllData(); }, [isAuthenticated, fetchAllData]);
   
   // --- Handlers ---
   const handleLogin = async (e: React.FormEvent) => {
@@ -270,6 +278,59 @@ const AdminPage: React.FC = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleProductPin = async (productId: number, action: 'top' | 'bottom') => {
+    try {
+      await adminAPI.pinProduct(productId, action);
+      toast({ title: action === 'top' ? '產品已置頂' : '產品已置底' });
+      fetchAllData();
+    } catch (error) {
+      toast({ title: '操作失敗', variant: 'destructive' });
+    }
+  };
+
+  const handleStartReorder = () => {
+    setIsReordering(true);
+    setReorderProducts([...products]);
+  };
+
+  const handleCancelReorder = () => {
+    setIsReordering(false);
+    setReorderProducts([]);
+  };
+
+  const handleSaveReorder = async () => {
+    try {
+      const productIds = reorderProducts.map(p => p.id);
+      await adminAPI.batchReorderProducts(productIds);
+      toast({ title: '產品順序已更新' });
+      setIsReordering(false);
+      setReorderProducts([]);
+      fetchAllData();
+    } catch (error) {
+      toast({ title: '更新順序失敗', variant: 'destructive' });
+    }
+  };
+
+  const moveProduct = (index: number, direction: 'up' | 'down') => {
+    const newProducts = [...reorderProducts];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (newIndex >= 0 && newIndex < newProducts.length) {
+      [newProducts[index], newProducts[newIndex]] = [newProducts[newIndex], newProducts[index]];
+      setReorderProducts(newProducts);
+    }
+  };
+
+  const handleProductSortChange = (field: string) => {
+    if (field === productSortBy) {
+      setProductSortOrder(productSortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setProductSortBy(field);
+      setProductSortOrder('desc');
+    }
+    fetchAllData();
   };
 
   // --- Render ---
@@ -407,7 +468,107 @@ const AdminPage: React.FC = () => {
       <Button type="submit" className="w-full">{editingProduct ? '更新' : '新增'}</Button>
       {editingProduct && <Button variant="outline" className="w-full" onClick={() => {setEditingProduct(null); setProductForm({});}}>取消</Button>}
     </form>,
-    <Table><TableHeader><TableRow><TableHead>名稱</TableHead><TableHead>分類</TableHead><TableHead>庫存</TableHead><TableHead>操作</TableHead></TableRow></TableHeader><TableBody>{products.map(p => <TableRow key={p.id}><TableCell>{p.name}</TableCell><TableCell>{p.category}</TableCell><TableCell>{p.stock}</TableCell><TableCell className="space-x-2"><Button size="sm" onClick={() => {setEditingProduct(p); setProductForm(p);}}><Pencil size={16}/></Button><Button variant="destructive" size="sm" onClick={() => handleDelete('Product', p.id)}><Trash2 size={16}/></Button><Button size="sm" variant="secondary" onClick={() => {handleFetchVariants(p.id); setActiveTab('variants')}}><ChevronRight size={16}/></Button></TableCell></TableRow>)}</TableBody></Table>
+    <div className="space-y-4">
+      {/* 排序控制欄 */}
+      <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">排序：</span>
+          <Button size="sm" variant={productSortBy === 'created_at' ? 'default' : 'outline'} onClick={() => handleProductSortChange('created_at')}>
+            創建時間 {productSortBy === 'created_at' && (productSortOrder === 'desc' ? '↓' : '↑')}
+          </Button>
+          <Button size="sm" variant={productSortBy === 'name' ? 'default' : 'outline'} onClick={() => handleProductSortChange('name')}>
+            名稱 {productSortBy === 'name' && (productSortOrder === 'desc' ? '↓' : '↑')}
+          </Button>
+          <Button size="sm" variant={productSortBy === 'price' ? 'default' : 'outline'} onClick={() => handleProductSortChange('price')}>
+            價格 {productSortBy === 'price' && (productSortOrder === 'desc' ? '↓' : '↑')}
+          </Button>
+          <Button size="sm" variant={productSortBy === 'stock' ? 'default' : 'outline'} onClick={() => handleProductSortChange('stock')}>
+            庫存 {productSortBy === 'stock' && (productSortOrder === 'desc' ? '↓' : '↑')}
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isReordering ? (
+            <Button size="sm" variant="secondary" onClick={handleStartReorder}>
+              <MoveVertical className="mr-1 h-4 w-4" />
+              手動排序
+            </Button>
+          ) : (
+            <>
+              <Button size="sm" variant="default" onClick={handleSaveReorder}>
+                <Save className="mr-1 h-4 w-4" />
+                保存順序
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelReorder}>
+                取消
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 產品列表 */}
+      {isReordering ? (
+        <div className="space-y-2">
+          {reorderProducts.map((p, index) => (
+            <div key={p.id} className="flex items-center gap-2 p-3 bg-white border rounded-lg">
+              <div className="flex flex-col gap-1">
+                <Button size="sm" variant="ghost" onClick={() => moveProduct(index, 'up')} disabled={index === 0}>
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => moveProduct(index, 'down')} disabled={index === reorderProducts.length - 1}>
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex-1">
+                <div className="font-medium">{p.name}</div>
+                <div className="text-sm text-gray-500">{p.category} · {p.brand} · ¥{p.price}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>名稱</TableHead>
+              <TableHead>分類</TableHead>
+              <TableHead>品牌</TableHead>
+              <TableHead>價格</TableHead>
+              <TableHead>庫存</TableHead>
+              <TableHead>操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.map(p => (
+              <TableRow key={p.id}>
+                <TableCell>{p.name}</TableCell>
+                <TableCell>{p.category}</TableCell>
+                <TableCell>{p.brand}</TableCell>
+                <TableCell>¥{p.price}</TableCell>
+                <TableCell>{p.stock}</TableCell>
+                <TableCell className="space-x-1">
+                  <Button size="sm" variant="ghost" onClick={() => handleProductPin(p.id, 'top')} title="置頂">
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleProductPin(p.id, 'bottom')} title="置底">
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" onClick={() => {setEditingProduct(p); setProductForm(p);}}>
+                    <Pencil size={16}/>
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete('Product', p.id)}>
+                    <Trash2 size={16}/>
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => {handleFetchVariants(p.id); setActiveTab('variants')}}>
+                    <ChevronRight size={16}/>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </div>
   );
 
   const renderVariantManagement = () => renderManagementUI('變體管理', variants, 

@@ -316,7 +316,12 @@ router.patch('/change-password', authenticateToken, async (req, res) => {
 // 產品管理 - 獲取所有產品
 router.get('/products', authenticateToken, async (req, res) => {
   try {
-    const { page = 1, limit = 20, category, brand } = req.query;
+    const { page = 1, limit = 20, category, brand, sort = 'created_at', order = 'desc' } = req.query;
+    
+    // 支持的排序字段
+    const allowedSortFields = ['created_at', 'name', 'price', 'stock', 'brand'];
+    const sortField = allowedSortFields.includes(sort) ? sort : 'created_at';
+    const sortOrder = order === 'asc' ? 'ASC' : 'DESC';
     
     let sql = 'SELECT * FROM products WHERE 1=1';
     const params = [];
@@ -331,7 +336,7 @@ router.get('/products', authenticateToken, async (req, res) => {
       params.push(brand);
     }
     
-    sql += ' ORDER BY created_at DESC';
+    sql += ` ORDER BY ${sortField} ${sortOrder}`;
     
     // 分頁
     const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -475,6 +480,73 @@ router.delete('/products/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('刪除產品失敗:', error);
     res.status(500).json({ error: '刪除產品失敗' });
+  }
+});
+
+// 產品置頂功能
+router.put('/products/:id/pin', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action } = req.body; // 'top' 或 'bottom'
+    
+    let newCreatedAt;
+    if (action === 'top') {
+      // 置頂：設置為當前時間
+      newCreatedAt = new Date().toISOString();
+    } else if (action === 'bottom') {
+      // 置底：設置為很早的時間
+      newCreatedAt = '2020-01-01T00:00:00.000Z';
+    } else {
+      return res.status(400).json({ error: '無效的操作' });
+    }
+    
+    await dbAsync.run(
+      'UPDATE products SET created_at = ? WHERE id = ?',
+      [newCreatedAt, id]
+    );
+    
+    res.json({ 
+      message: action === 'top' ? '產品已置頂' : '產品已置底',
+      created_at: newCreatedAt
+    });
+  } catch (error) {
+    console.error('調整產品順序失敗:', error);
+    res.status(500).json({ error: '調整產品順序失敗' });
+  }
+});
+
+// 批量調整產品順序
+router.put('/products/batch-reorder', authenticateToken, async (req, res) => {
+  try {
+    const { productIds } = req.body; // 按照期望順序排列的產品ID數組
+    
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ error: '請提供產品ID列表' });
+    }
+    
+    await dbAsync.run('BEGIN TRANSACTION');
+    
+    try {
+      // 按照數組順序分配時間戳，越前面的時間越新
+      const baseTime = new Date();
+      
+      for (let i = 0; i < productIds.length; i++) {
+        const timestamp = new Date(baseTime.getTime() - i * 1000).toISOString();
+        await dbAsync.run(
+          'UPDATE products SET created_at = ? WHERE id = ?',
+          [timestamp, productIds[i]]
+        );
+      }
+      
+      await dbAsync.run('COMMIT');
+      res.json({ message: '產品順序已更新' });
+    } catch (error) {
+      await dbAsync.run('ROLLBACK');
+      throw error;
+    }
+  } catch (error) {
+    console.error('批量調整產品順序失敗:', error);
+    res.status(500).json({ error: '批量調整產品順序失敗' });
   }
 });
 

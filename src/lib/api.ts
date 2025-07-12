@@ -188,26 +188,26 @@ export const announcementsAPI = {
 
 // 管理員相關API
 export const adminAPI = {
-  login: async (data: { username: string; password: string }) => {
-    try {
-      console.log('🔐 嘗試管理員登入...', { baseURL: API_BASE_URL, username: data.username });
-      const response = await api.post('/admin/login', data);
-      console.log('✅ 登入成功');
-      return response;
-    } catch (error: any) {
-      console.error('❌ 登入失敗:', error.response?.data || error.message);
-      // 提供更詳細的錯誤信息
-      if (error.response?.status === 401) {
-        throw new Error(error.response.data?.error || '用戶名或密碼錯誤');
-      }
-      throw error;
-    }
-  },
+  // 認證
+  login: (credentials: { username: string; password: string }) => 
+    api.post<{ token: string; admin: { id: number; username: string } }>('/admin/login', credentials),
   
-  verify: () => api.get('/admin/verify'),
-  
+  verify: () => 
+    api.get<{ valid: boolean; admin: { id: number; username: string } }>('/admin/verify'),
+
+  // 儀表板
   getDashboard: () => api.get('/admin/dashboard'),
   
+  getImagesInFolder: () => api.get('/admin/images/folder'),
+  
+  uploadImage: (formData: FormData) => 
+    api.post('/admin/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+  
+  deleteImage: (filename: string) => 
+    api.delete(`/admin/images/${filename}`),
+
   // 產品管理
   getProducts: (params?: any) => api.get('/admin/products', { params }),
   
@@ -220,6 +220,13 @@ export const adminAPI = {
   
   updateBatchStock: (data: { updates: Array<{ id: number; stock: number }> }) => 
     api.put('/admin/products/batch-stock', data),
+  
+  // 產品排序功能
+  pinProduct: (id: number, action: 'top' | 'bottom') => 
+    api.put(`/admin/products/${id}/pin`, { action }),
+  
+  batchReorderProducts: (productIds: number[]) => 
+    api.put('/admin/products/batch-reorder', { productIds }),
   
   // 產品變體管理
   getProductVariants: (productId: number) => 
@@ -282,13 +289,7 @@ export const adminAPI = {
     api.post('/admin/telegram-test', data),
   
   // 圖片管理
-  uploadImage: (formData) => api.post('/admin/upload-image', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  }),
   getImages: () => api.get('/admin/images'),
-  deleteImage: (filename: string) => api.delete(`/admin/images/${filename}`)
 };
 
 // 系統設置相關API (公開)
