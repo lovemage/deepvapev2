@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/lib/store';
 
@@ -25,14 +25,49 @@ const FloatingCartButton: React.FC<FloatingCartButtonProps> = ({ className = '' 
     return null;
   }
 
-  const handleClick = () => {
+  const handleCartClick = () => {
     navigate('/cart');
   };
 
+  const handleLineClick = () => {
+    // 開啟 Line 聯絡方式
+    window.open('https://line.me/ti/p/@deepvape', '_blank');
+  };
+
   return (
-    <div className={`fixed bottom-6 right-6 z-50 ${className}`}>
+    <div className={`fixed bottom-6 right-6 z-50 flex flex-col space-y-3 ${className}`}>
+      {/* Line 聯絡按鈕 */}
       <Button
-        onClick={handleClick}
+        onClick={handleLineClick}
+        size="lg"
+        className="relative h-16 w-16 rounded-full
+                   bg-green-500/20 backdrop-blur-md border border-green-400/30
+                   hover:bg-green-500/30 hover:border-green-400/40
+                   shadow-xl hover:shadow-2xl
+                   transition-all duration-500 ease-out
+                   transform hover:scale-110 active:scale-95
+                   before:absolute before:inset-0 before:rounded-full
+                   before:bg-gradient-to-br before:from-green-400/40 before:to-transparent
+                   before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300"
+        aria-label="Line 聯絡客服"
+      >
+        <div className="relative z-10 flex flex-col items-center justify-center">
+          <MessageCircle className="h-5 w-5 text-green-600 mb-1 drop-shadow-sm transition-colors duration-300" />
+          <span className="text-[10px] font-bold text-green-600 leading-none">LINE</span>
+        </div>
+
+        {/* 液態波紋效果 */}
+        <div className="absolute inset-0 rounded-full overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-transparent
+                          rounded-full transform rotate-45 scale-150
+                          transition-transform duration-700 ease-out
+                          hover:scale-200 hover:rotate-90"></div>
+        </div>
+      </Button>
+
+      {/* 購物車按鈕 */}
+      <Button
+        onClick={handleCartClick}
         size="lg"
         className="relative h-16 w-16 rounded-full
                    bg-white/20 backdrop-blur-md border border-white/30
