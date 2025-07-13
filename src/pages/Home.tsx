@@ -20,6 +20,9 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [heroImageUrl, setHeroImageUrl] = useState('/images/itay-kabalo-b3sel60dv8a-unsplash.jpg');
+  const [carouselImages, setCarouselImages] = useState<string[]>([]);
+  const [carouselEnabled, setCarouselEnabled] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const featuredRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,11 +36,35 @@ const Home: React.FC = () => {
     loadSettings();
   }, []);
 
+  // 輪播圖片自動切換
+  useEffect(() => {
+    if (carouselEnabled && carouselImages.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % carouselImages.length);
+      }, 2500); // 2.5秒切換一次
+
+      return () => clearInterval(interval);
+    }
+  }, [carouselEnabled, carouselImages.length]);
+
   const loadSettings = async () => {
     try {
       const response = await settingsAPI.getPublicSettings();
       if (response.data.hero_image_url) {
         setHeroImageUrl(response.data.hero_image_url);
+      }
+
+      // 載入輪播設置
+      if (response.data.hero_carousel_enabled === 'true') {
+        const images = [
+          response.data.hero_carousel_image_1,
+          response.data.hero_carousel_image_2
+        ].filter(Boolean);
+        
+        if (images.length > 0) {
+          setCarouselImages(images);
+          setCarouselEnabled(true);
+        }
       }
 
       // 載入商品顯示設置
@@ -134,41 +161,63 @@ const Home: React.FC = () => {
       />
       {/* Hero Section */}
       <section 
-        className="relative text-white"
+        className="relative text-white overflow-hidden"
         style={{
-          backgroundImage: `url(${heroImageUrl})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          height: '60vh',
+          minHeight: '400px'
         }}
       >
-        <div className="absolute inset-0 bg-black/40"></div>
-        <div className="relative container mx-auto px-4 py-24">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg">
-              DeepVape 商城
-            </h1>
-            <p className="text-lg md:text-xl mb-8 text-gray-100 drop-shadow-md">
-              精選各大品牌電子煙產品，提供最優質的購物體驗
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="bg-white text-gray-900 hover:bg-gray-100 shadow-lg"
-                onClick={() => navigate('/products')}
-              >
-                立即購買
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="bg-white text-gray-900 hover:bg-gray-100 shadow-lg"
-                onClick={scrollToFeatured}
-              >
-                了解更多
-              </Button>
-            </div>
+        {/* 輪播圖片容器 */}
+        <div className="absolute inset-0">
+          {carouselEnabled && carouselImages.length > 0 ? (
+            // 輪播模式
+            carouselImages.map((image, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{
+                  backgroundImage: `url(${image})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              />
+            ))
+          ) : (
+            // 單張圖片模式
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${heroImageUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            />
+          )}
+        </div>
+        
+        {/* 按鈕容器 */}
+        <div className="absolute inset-0 flex items-end justify-center pb-12">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button 
+              size="lg" 
+              className="bg-white/60 text-gray-900 hover:bg-white/80 shadow-lg backdrop-blur-sm"
+              onClick={() => navigate('/products')}
+            >
+              立即購買
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="bg-white/60 text-gray-900 hover:bg-white/80 shadow-lg backdrop-blur-sm border-white/60"
+              onClick={scrollToFeatured}
+            >
+              了解更多
+            </Button>
           </div>
         </div>
       </section>

@@ -7,7 +7,7 @@ router.get('/public', async (req, res) => {
   try {
     const settings = await dbAsync.all(`
       SELECT key, value FROM system_settings
-      WHERE key IN ('free_shipping_threshold', 'hero_image_url', 'show_product_reviews', 'show_product_preview')
+      WHERE key IN ('free_shipping_threshold', 'hero_image_url', 'show_product_reviews', 'show_product_preview', 'hero_carousel_image_1', 'hero_carousel_image_2', 'hero_carousel_enabled')
     `);
 
     const settingsObj = {};

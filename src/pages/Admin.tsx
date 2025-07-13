@@ -656,7 +656,49 @@ const AdminPage: React.FC = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900">基本設置</h3>
             <div className="space-y-2"><Label>免運費門檻</Label><Input type="number" value={settingsForm.free_shipping_threshold || ''} onChange={e => setSettingsForm({...settingsForm, free_shipping_threshold: e.target.value})} /></div>
-            <div className="space-y-2"><Label>首頁橫幅圖片 URL</Label><Input value={settingsForm.hero_image_url || ''} onChange={e => setSettingsForm({...settingsForm, hero_image_url: e.target.value})} /></div>
+            <div className="space-y-2"><Label>首頁橫幅圖片 URL (舊版)</Label><Input value={settingsForm.hero_image_url || ''} onChange={e => setSettingsForm({...settingsForm, hero_image_url: e.target.value})} placeholder="單張圖片模式使用" /></div>
+          </div>
+
+          {/* 輪播圖片設置 */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">首頁輪播圖片設置</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base">啟用輪播圖片</Label>
+                  <p className="text-sm text-gray-500">啟用後將以輪播模式顯示多張圖片，2.5秒自動切換</p>
+                </div>
+                <Switch
+                  checked={settingsForm.hero_carousel_enabled === 'true'}
+                  onCheckedChange={(checked) =>
+                    setTimeout(() => {
+                      setSettingsForm({...settingsForm, hero_carousel_enabled: checked.toString()})
+                    }, 0)
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>輪播圖片 1 URL</Label>
+                <Input 
+                  value={settingsForm.hero_carousel_image_1 || ''} 
+                  onChange={e => setSettingsForm({...settingsForm, hero_carousel_image_1: e.target.value})} 
+                  placeholder="第一張輪播圖片URL"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>輪播圖片 2 URL</Label>
+                <Input 
+                  value={settingsForm.hero_carousel_image_2 || ''} 
+                  onChange={e => setSettingsForm({...settingsForm, hero_carousel_image_2: e.target.value})} 
+                  placeholder="第二張輪播圖片URL"
+                />
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>提示：</strong> 當啟用輪播圖片時，系統將使用上面兩張圖片進行輪播。圖片建議使用相同比例，確保在不同設備上都能完整顯示。
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Telegram 通知設置 */}
