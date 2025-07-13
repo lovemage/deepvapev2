@@ -162,45 +162,33 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <section 
         className="relative text-white overflow-hidden"
-        style={{
-          height: '60vh',
-          minHeight: '400px'
-        }}
       >
         {/* 輪播圖片容器 */}
-        <div className="absolute inset-0">
+        <div className="relative">
           {carouselEnabled && carouselImages.length > 0 ? (
             // 輪播模式
             carouselImages.map((image, index) => (
-              <div
+              <img
                 key={index}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                src={image}
+                alt={`輪播圖片 ${index + 1}`}
+                className={`w-full h-auto object-cover transition-opacity duration-1000 ${
+                  index === currentImageIndex ? 'opacity-100' : 'opacity-0 absolute inset-0'
                 }`}
-                style={{
-                  backgroundImage: `url(${image})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat'
-                }}
               />
             ))
           ) : (
             // 單張圖片模式
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `url(${heroImageUrl})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat'
-              }}
+            <img
+              src={heroImageUrl}
+              alt="首頁橫幅圖片"
+              className="w-full h-auto object-cover"
             />
           )}
         </div>
         
         {/* 按鈕容器 */}
-        <div className="absolute inset-0 flex items-end justify-center pb-12">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
           <div className="flex flex-col sm:flex-row gap-4">
             <Button 
               size="lg" 
