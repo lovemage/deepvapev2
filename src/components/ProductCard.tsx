@@ -60,16 +60,19 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) => {
           </Badge>
 
           {/* Stock Status Badge */}
-          {stockStatus.status === 'out-of-stock' && (
+          {product.is_discontinued ? (
+            <Badge variant="destructive" className="absolute top-2 right-2 bg-gray-500 hover:bg-gray-600">
+              補貨中
+            </Badge>
+          ) : stockStatus.status === 'out-of-stock' ? (
             <Badge variant="destructive" className="absolute top-2 right-2">
               缺貨
             </Badge>
-          )}
-          {stockStatus.status === 'low-stock' && (
+          ) : stockStatus.status === 'low-stock' ? (
             <Badge variant="outline" className="absolute top-2 right-2 bg-orange-500 text-white border-orange-500">
               庫存不足
             </Badge>
-          )}
+          ) : null}
         </div>
 
         <CardContent className="p-4">
@@ -126,16 +129,28 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) => {
       </Link>
 
       <CardFooter className="p-4 pt-0">
-        <Button
-          onClick={viewDetails}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
-          size="sm"
-        >
-          <div className="flex items-center space-x-2">
-            <Eye className="h-4 w-4" />
-            <span>查看詳情</span>
-          </div>
-        </Button>
+        {product.is_discontinued ? (
+          <Button
+            disabled
+            className="w-full bg-gray-400 text-white cursor-not-allowed"
+            size="sm"
+          >
+            <div className="flex items-center space-x-2">
+              <span>補貨中</span>
+            </div>
+          </Button>
+        ) : (
+          <Button
+            onClick={viewDetails}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
+            size="sm"
+          >
+            <div className="flex items-center space-x-2">
+              <Eye className="h-4 w-4" />
+              <span>查看詳情</span>
+            </div>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

@@ -465,6 +465,20 @@ const AdminPage: React.FC = () => {
       <Input type="number" placeholder="庫存" value={productForm.stock || ''} onChange={e => setProductForm({...productForm, stock: Number(e.target.value)})} required/>
       <Input placeholder="圖片 URL" value={productForm.image_url || ''} onChange={e => setProductForm({...productForm, image_url: e.target.value})} />
       <Textarea placeholder="描述" value={productForm.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} />
+
+      {/* 停賣狀態 */}
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="is_discontinued"
+          checked={productForm.is_discontinued || false}
+          onChange={e => setProductForm({...productForm, is_discontinued: e.target.checked})}
+          className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500"
+        />
+        <label htmlFor="is_discontinued" className="text-sm font-medium text-gray-700">
+          停賣商品 (勾選後前端顯示補貨中，無法下單)
+        </label>
+      </div>
       <Button type="submit" className="w-full">{editingProduct ? '更新' : '新增'}</Button>
       {editingProduct && <Button variant="outline" className="w-full" onClick={() => {setEditingProduct(null); setProductForm({});}}>取消</Button>}
     </form>,
@@ -535,6 +549,7 @@ const AdminPage: React.FC = () => {
               <TableHead>品牌</TableHead>
               <TableHead>價格</TableHead>
               <TableHead>庫存</TableHead>
+              <TableHead>狀態</TableHead>
               <TableHead>操作</TableHead>
             </TableRow>
           </TableHeader>
@@ -546,6 +561,17 @@ const AdminPage: React.FC = () => {
                 <TableCell>{p.brand}</TableCell>
                 <TableCell>¥{p.price}</TableCell>
                 <TableCell>{p.stock}</TableCell>
+                <TableCell>
+                  {p.is_discontinued ? (
+                    <Badge variant="secondary" className="bg-gray-500 text-white">
+                      補貨中
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-green-600 border-green-600">
+                      正常
+                    </Badge>
+                  )}
+                </TableCell>
                 <TableCell className="space-x-1">
                   <Button size="sm" variant="ghost" onClick={() => handleProductPin(p.id, 'top')} title="置頂">
                     <ArrowUp className="h-4 w-4" />

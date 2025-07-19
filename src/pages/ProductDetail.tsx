@@ -59,6 +59,16 @@ const ProductDetail: React.FC = () => {
   const addToCart = async () => {
     if (!product) return;
 
+    // 檢查商品是否停賣
+    if (product.is_discontinued) {
+      toast({
+        title: "商品補貨中",
+        description: "此商品目前補貨中，暫時無法購買",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const availableStock = selectedVariant ? selectedVariant.stock : product.stock;
     if (availableStock === 0) {
       toast({
@@ -361,9 +371,14 @@ const ProductDetail: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-            <Button size="lg" className="w-full" onClick={addToCart} disabled={isAddingToCart || stockStatus.status === 'out-of-stock'}>
+            <Button
+              size="lg"
+              className={`w-full ${product?.is_discontinued ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' : ''}`}
+              onClick={addToCart}
+              disabled={isAddingToCart || stockStatus.status === 'out-of-stock' || product?.is_discontinued}
+            >
               <ShoppingCart className="h-5 w-5 mr-2" />
-              {isAddingToCart ? '加入中...' : '加入購物車'}
+              {product?.is_discontinued ? '補貨中' : isAddingToCart ? '加入中...' : '加入購物車'}
             </Button>
           </div>
 

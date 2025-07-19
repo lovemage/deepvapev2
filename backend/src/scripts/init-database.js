@@ -21,6 +21,7 @@ const createTables = async () => {
         description TEXT,
         image_url TEXT,
         stock INTEGER DEFAULT 0,
+        is_discontinued BOOLEAN DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);

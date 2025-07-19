@@ -402,22 +402,22 @@ router.put('/products/batch-stock', authenticateToken, async (req, res) => {
 // 創建產品
 router.post('/products', authenticateToken, async (req, res) => {
   try {
-    const { name, category, brand, price, description, image_url, stock } = req.body;
-    
+    const { name, category, brand, price, description, image_url, stock, is_discontinued } = req.body;
+
     if (!name || !category || !brand || !price) {
       return res.status(400).json({ error: '缺少必要參數' });
     }
-    
+
     const validCategories = ['host', 'cartridge', 'disposable', 'oil'];
     if (!validCategories.includes(category)) {
       return res.status(400).json({ error: '產品類別無效' });
     }
-    
+
     const result = await dbAsync.run(`
-      INSERT INTO products (name, category, brand, price, description, image_url, stock)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [name, category, brand, price, description || '', image_url || '', stock || 0]);
-    
+      INSERT INTO products (name, category, brand, price, description, image_url, stock, is_discontinued)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [name, category, brand, price, description || '', image_url || '', stock || 0, is_discontinued ? 1 : 0]);
+
     res.status(201).json({
       id: result.id,
       message: '產品創建成功'
@@ -432,28 +432,28 @@ router.post('/products', authenticateToken, async (req, res) => {
 router.put('/products/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, brand, price, description, image_url, stock } = req.body;
-    
+    const { name, category, brand, price, description, image_url, stock, is_discontinued } = req.body;
+
     if (!name || !category || !brand || !price) {
       return res.status(400).json({ error: '缺少必要參數' });
     }
-    
+
     const validCategories = ['host', 'cartridge', 'disposable', 'oil'];
     if (!validCategories.includes(category)) {
       return res.status(400).json({ error: '產品類別無效' });
     }
-    
+
     const result = await dbAsync.run(`
-      UPDATE products 
-      SET name = ?, category = ?, brand = ?, price = ?, 
-          description = ?, image_url = ?, stock = ?
+      UPDATE products
+      SET name = ?, category = ?, brand = ?, price = ?,
+          description = ?, image_url = ?, stock = ?, is_discontinued = ?
       WHERE id = ?
-    `, [name, category, brand, price, description || '', image_url || '', stock || 0, id]);
-    
+    `, [name, category, brand, price, description || '', image_url || '', stock || 0, is_discontinued ? 1 : 0, id]);
+
     if (result.changes === 0) {
       return res.status(404).json({ error: '產品不存在' });
     }
-    
+
     res.json({ message: '產品更新成功' });
   } catch (error) {
     console.error('更新產品失敗:', error);
