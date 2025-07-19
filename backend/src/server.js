@@ -247,6 +247,11 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
     const initDb = require('./scripts/init-database.js');
     await initDb();
     console.log('✅ 數據庫初始化完成');
+
+    // 執行數據庫遷移
+    console.log('🔄 執行數據庫遷移...');
+    require('./scripts/migrate-add-discontinued.js');
+    console.log('✅ 數據庫遷移完成');
     
     // 檢查是否需要強制重設管理員
     if (process.env.FORCE_ADMIN_RESET === 'true') {
