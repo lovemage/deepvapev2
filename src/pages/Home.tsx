@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Zap, Shield, Truck, HeartHandshake, Star, X } from 'lucide-react';
+import { Zap, Shield, Truck, HeartHandshake, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -120,9 +120,7 @@ const Home: React.FC = () => {
     }
   };
 
-  const scrollToFeatured = () => {
-    featuredRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+
 
   const features = [
     {
@@ -187,27 +185,7 @@ const Home: React.FC = () => {
           )}
         </div>
         
-        {/* 按鈕容器 */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              size="lg" 
-              className="bg-white/60 text-gray-900 hover:bg-white/80 shadow-lg backdrop-blur-sm"
-              onClick={() => navigate('/products')}
-            >
-              立即購買
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="bg-white/60 text-gray-900 hover:bg-white/80 shadow-lg backdrop-blur-sm border-white/60"
-              onClick={scrollToFeatured}
-            >
-              了解更多
-            </Button>
-          </div>
-        </div>
+
       </section>
 
       {/* Featured Products Section */}
@@ -351,7 +329,7 @@ const Home: React.FC = () => {
 
       {/* Age Verification Modal */}
       <Dialog open={showAgeVerification} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-[#c8302e]">
+        <DialogContent className="max-w-[90vw] sm:max-w-[400px] p-0 overflow-hidden bg-[#c8302e]">
           <DialogTitle className="sr-only">
             年齡驗證 - DEEPVAPE 優惠活動
           </DialogTitle>
@@ -364,41 +342,44 @@ const Home: React.FC = () => {
               alt="DEEPVAPE NEW OPEN 優惠" 
               className="w-full h-auto"
             />
-            <div className="p-6 bg-white">
-              <p className="text-gray-700 text-center mb-4 font-medium">
+            <div className="p-4 sm:p-6 bg-white">
+              <p className="text-gray-700 text-center mb-3 sm:mb-4 font-medium text-sm sm:text-base">
                 未滿18歲禁止進入
               </p>
-              <div className="bg-gray-100 rounded-lg p-4 mb-4">
-                <p className="text-sm text-gray-600 mb-2 text-center">優惠碼</p>
+              <div className="bg-gray-100 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 text-center">優惠碼</p>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value="DEEP2025"
                     readOnly
-                    className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-center font-bold text-lg"
+                    className="flex-1 px-2 sm:px-3 py-2 bg-white border border-gray-300 rounded-md text-center font-bold text-base sm:text-lg"
                   />
                   <Button
                     onClick={() => {
                       navigator.clipboard.writeText('DEEP2025');
                       alert('優惠碼已複製！');
                     }}
-                    className="bg-[#c8302e] hover:bg-[#a02825] text-white"
+                    className="bg-[#c8302e] hover:bg-[#a02825] text-white text-sm sm:text-base px-3 sm:px-4"
+                    size="sm"
                   >
                     複製
                   </Button>
                 </div>
               </div>
-              <div className="flex gap-4 justify-center">
-                <Button 
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
+                <Button
                   onClick={() => handleAgeConfirm(true)}
-                  className="bg-[#c8302e] hover:bg-[#a02825] text-white px-6"
+                  className="bg-[#c8302e] hover:bg-[#a02825] text-white px-4 sm:px-6 text-sm sm:text-base"
+                  size="sm"
                 >
                   我已滿18歲
                 </Button>
-                <Button 
+                <Button
                   onClick={() => handleAgeConfirm(false)}
                   variant="outline"
-                  className="border-[#c8302e] text-[#c8302e] hover:bg-[#c8302e] hover:text-white px-6"
+                  className="border-[#c8302e] text-[#c8302e] hover:bg-[#c8302e] hover:text-white px-4 sm:px-6 text-sm sm:text-base"
+                  size="sm"
                 >
                   我未滿18歲
                 </Button>
