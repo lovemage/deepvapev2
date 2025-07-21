@@ -156,7 +156,7 @@ export const cartAPI = {
 
 // 優惠券相關API
 export const couponsAPI = {
-  validateCoupon: (data: { code: string; amount: number }) => 
+  validateCoupon: (data: { code: string; amount: number; sessionId?: string }) =>
     api.post('/coupons/validate', data),
   
   getCoupons: () => api.get('/coupons'),

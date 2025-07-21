@@ -13,6 +13,7 @@ export interface Product {
   image_url: string;
   stock: number;
   is_discontinued?: boolean;
+  coupon_excluded?: boolean;
   created_at: string;
   variants?: ProductVariant[];
 }
