@@ -5,33 +5,50 @@ const router = express.Router();
 // 驗證優惠券
 router.post('/validate', async (req, res) => {
   try {
-    const { code, amount } = req.body;
-    
+    const { code, amount, sessionId } = req.body;
+
     if (!code) {
       return res.status(400).json({ error: '請輸入優惠碼' });
     }
-    
+
     const coupon = await dbAsync.get(`
-      SELECT * FROM coupons 
+      SELECT * FROM coupons
       WHERE code = ? AND is_active = 1
     `, [code]);
-    
+
     if (!coupon) {
       return res.status(404).json({ error: '優惠碼不存在或已失效' });
     }
-    
+
     // 檢查是否過期
     if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
       return res.status(400).json({ error: '優惠碼已過期' });
     }
-    
+
+    // 檢查購物車中是否有排除優惠券的商品
+    if (sessionId) {
+      const excludedItems = await dbAsync.all(`
+        SELECT p.name
+        FROM cart_items ci
+        JOIN products p ON ci.product_id = p.id
+        WHERE ci.session_id = ? AND p.coupon_excluded = 1
+      `, [sessionId]);
+
+      if (excludedItems.length > 0) {
+        const excludedNames = excludedItems.map(item => item.name).join('、');
+        return res.status(400).json({
+          error: `購物車中的商品「${excludedNames}」不適用優惠券`
+        });
+      }
+    }
+
     // 檢查最低消費金額
     if (amount && amount < coupon.min_amount) {
-      return res.status(400).json({ 
-        error: `訂單金額需滿 $${coupon.min_amount} 才能使用此優惠碼` 
+      return res.status(400).json({
+        error: `訂單金額需滿 $${coupon.min_amount} 才能使用此優惠碼`
       });
     }
-    
+
     // 計算折扣金額
     let discountAmount = 0;
     if (coupon.type === 'percentage') {
@@ -39,7 +56,7 @@ router.post('/validate', async (req, res) => {
     } else if (coupon.type === 'fixed') {
       discountAmount = coupon.value;
     }
-    
+
     res.json({
       valid: true,
       coupon: {

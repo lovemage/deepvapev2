@@ -479,6 +479,20 @@ const AdminPage: React.FC = () => {
           停賣商品 (勾選後前端顯示補貨中，無法下單)
         </label>
       </div>
+
+      {/* 優惠券排除 */}
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="coupon_excluded"
+          checked={productForm.coupon_excluded || false}
+          onChange={e => setProductForm({...productForm, coupon_excluded: e.target.checked})}
+          className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500"
+        />
+        <label htmlFor="coupon_excluded" className="text-sm font-medium text-gray-700">
+          排除優惠券 (勾選後此商品無法使用優惠券)
+        </label>
+      </div>
       <Button type="submit" className="w-full">{editingProduct ? '更新' : '新增'}</Button>
       {editingProduct && <Button variant="outline" className="w-full" onClick={() => {setEditingProduct(null); setProductForm({});}}>取消</Button>}
     </form>,
@@ -562,15 +576,22 @@ const AdminPage: React.FC = () => {
                 <TableCell>¥{p.price}</TableCell>
                 <TableCell>{p.stock}</TableCell>
                 <TableCell>
-                  {p.is_discontinued ? (
-                    <Badge variant="secondary" className="bg-gray-500 text-white">
-                      補貨中
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-green-600 border-green-600">
-                      正常
-                    </Badge>
-                  )}
+                  <div className="flex flex-col gap-1">
+                    {p.is_discontinued ? (
+                      <Badge variant="secondary" className="bg-gray-500 text-white">
+                        補貨中
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        正常
+                      </Badge>
+                    )}
+                    {p.coupon_excluded && (
+                      <Badge variant="outline" className="text-orange-600 border-orange-600 text-xs">
+                        無優惠券
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="space-x-1">
                   <Button size="sm" variant="ghost" onClick={() => handleProductPin(p.id, 'top')} title="置頂">

@@ -155,7 +155,8 @@ const Cart: React.FC = () => {
     try {
       const response = await couponsAPI.validateCoupon({
         code: couponCode.trim(),
-        amount: totalAmount
+        amount: totalAmount,
+        sessionId: sessionId
       });
       
       setAppliedCoupon(response.data);
