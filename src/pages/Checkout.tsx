@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useCartStore } from '@/lib/store';
 import { formatPrice } from '@/lib/utils';
-import { settingsAPI, ordersAPI } from '@/lib/api';
+import { cartAPI, settingsAPI, ordersAPI } from '@/lib/api';
 import Captcha from '@/components/Captcha';
 
 interface CustomerInfo {
