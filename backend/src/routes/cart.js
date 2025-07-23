@@ -157,4 +157,26 @@ router.delete('/clear/:sessionId', async (req, res) => {
   }
 });
 
+// 檢查購物車中是否有排除免運的商品
+router.get('/check-shipping/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    
+    const shippingExcludedItems = await dbAsync.all(`
+      SELECT p.name
+      FROM cart_items ci
+      JOIN products p ON ci.product_id = p.id
+      WHERE ci.session_id = ? AND p.shipping_excluded = 1
+    `, [sessionId]);
+
+    res.json({
+      hasShippingExcludedItems: shippingExcludedItems.length > 0,
+      excludedItems: shippingExcludedItems
+    });
+  } catch (error) {
+    console.error('檢查免運排除商品失敗:', error);
+    res.status(500).json({ error: '檢查免運排除商品失敗' });
+  }
+});
+
 module.exports = router;

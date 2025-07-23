@@ -402,7 +402,7 @@ router.put('/products/batch-stock', authenticateToken, async (req, res) => {
 // 創建產品
 router.post('/products', authenticateToken, async (req, res) => {
   try {
-    const { name, category, brand, price, description, image_url, stock, is_discontinued, coupon_excluded } = req.body;
+    const { name, category, brand, price, description, image_url, stock, is_discontinued, coupon_excluded, shipping_excluded } = req.body;
 
     if (!name || !category || !brand || !price) {
       return res.status(400).json({ error: '缺少必要參數' });
@@ -414,9 +414,9 @@ router.post('/products', authenticateToken, async (req, res) => {
     }
 
     const result = await dbAsync.run(`
-      INSERT INTO products (name, category, brand, price, description, image_url, stock, is_discontinued, coupon_excluded)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [name, category, brand, price, description || '', image_url || '', stock || 0, is_discontinued ? 1 : 0, coupon_excluded ? 1 : 0]);
+      INSERT INTO products (name, category, brand, price, description, image_url, stock, is_discontinued, coupon_excluded, shipping_excluded)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [name, category, brand, price, description || '', image_url || '', stock || 0, is_discontinued ? 1 : 0, coupon_excluded ? 1 : 0, shipping_excluded ? 1 : 0]);
 
     res.status(201).json({
       id: result.id,
@@ -432,7 +432,7 @@ router.post('/products', authenticateToken, async (req, res) => {
 router.put('/products/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, brand, price, description, image_url, stock, is_discontinued, coupon_excluded } = req.body;
+    const { name, category, brand, price, description, image_url, stock, is_discontinued, coupon_excluded, shipping_excluded } = req.body;
 
     if (!name || !category || !brand || !price) {
       return res.status(400).json({ error: '缺少必要參數' });
@@ -446,9 +446,9 @@ router.put('/products/:id', authenticateToken, async (req, res) => {
     const result = await dbAsync.run(`
       UPDATE products
       SET name = ?, category = ?, brand = ?, price = ?,
-          description = ?, image_url = ?, stock = ?, is_discontinued = ?, coupon_excluded = ?
+          description = ?, image_url = ?, stock = ?, is_discontinued = ?, coupon_excluded = ?, shipping_excluded = ?
       WHERE id = ?
-    `, [name, category, brand, price, description || '', image_url || '', stock || 0, is_discontinued ? 1 : 0, coupon_excluded ? 1 : 0, id]);
+    `, [name, category, brand, price, description || '', image_url || '', stock || 0, is_discontinued ? 1 : 0, coupon_excluded ? 1 : 0, shipping_excluded ? 1 : 0, id]);
 
     if (result.changes === 0) {
       return res.status(404).json({ error: '產品不存在' });

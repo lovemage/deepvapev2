@@ -32,6 +32,7 @@ const Cart: React.FC = () => {
   const [couponCode, setCouponCode] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(1000);
+  const [hasShippingExcludedItems, setHasShippingExcludedItems] = useState(false);
 
   useEffect(() => {
     loadCart();
@@ -55,19 +56,24 @@ const Cart: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await cartAPI.getCart(sessionId);
-      console.log('購物車數據載入:', response.data);
-      console.log('購物車商品:', response.data.items);
-      response.data.items.forEach((item: any, index: number) => {
+      const [cartResponse, shippingResponse] = await Promise.all([
+        cartAPI.getCart(sessionId),
+        cartAPI.checkShipping(sessionId)
+      ]);
+      
+      console.log('購物車數據載入:', cartResponse.data);
+      console.log('購物車商品:', cartResponse.data.items);
+      cartResponse.data.items.forEach((item: any, index: number) => {
         console.log(`商品 ${index}:`, {
           id: item.id,
           name: item.name,
           idType: typeof item.id
         });
       });
-      setItems(response.data.items);
-      setTotalAmount(response.data.totalAmount);
-      setItemCount(response.data.itemCount);
+      setItems(cartResponse.data.items);
+      setTotalAmount(cartResponse.data.totalAmount);
+      setItemCount(cartResponse.data.itemCount);
+      setHasShippingExcludedItems(shippingResponse.data.hasShippingExcludedItems);
     } catch (error) {
       console.error('載入購物車失敗:', error);
     } finally {
@@ -207,8 +213,8 @@ const Cart: React.FC = () => {
 
   const calculateTotals = () => {
     const subtotal = totalAmount;
-    // 根據免運費門檻計算運費
-    const shipping = subtotal >= freeShippingThreshold ? 0 : 60; // 7-11取貨運費
+    // 根據免運費門檻和排除免運商品計算運費
+    const shipping = (subtotal >= freeShippingThreshold && !hasShippingExcludedItems) ? 0 : 60; // 7-11取貨運費
     const discount = appliedCoupon?.discountAmount || 0;
     const finalTotal = subtotal + shipping - discount;
     
@@ -445,12 +451,17 @@ const Cart: React.FC = () => {
                   <span>運費</span>
                   <span>{shipping === 0 ? '免運費' : formatPrice(shipping)}</span>
                 </div>
-                {shipping > 0 && subtotal < threshold && (
+                {shipping > 0 && subtotal < threshold && !hasShippingExcludedItems && (
                   <div className="text-xs text-orange-600">
                     再消費 {formatPrice(threshold - subtotal)} 即可享免運費
                   </div>
                 )}
-                {shipping === 0 && subtotal >= threshold && (
+                {shipping > 0 && hasShippingExcludedItems && (
+                  <div className="text-xs text-orange-600">
+                    購物車中包含不適用免運的商品
+                  </div>
+                )}
+                {shipping === 0 && subtotal >= threshold && !hasShippingExcludedItems && (
                   <div className="text-xs text-green-600">
                     🎉 恭喜！您已享有免運費優惠
                   </div>

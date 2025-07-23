@@ -23,7 +23,7 @@ interface CustomerInfo {
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { items, totalAmount, appliedCoupon, clearCart } = useCartStore();
+  const { sessionId, items, totalAmount, appliedCoupon, clearCart } = useCartStore();
 
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: '',
@@ -38,6 +38,7 @@ const Checkout: React.FC = () => {
   const [orderId, setOrderId] = useState('');
   const [captchaValid, setCaptchaValid] = useState(false);
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(1000);
+  const [hasShippingExcludedItems, setHasShippingExcludedItems] = useState(false);
 
   useEffect(() => {
     // 如果購物車為空，重定向到購物車頁面
@@ -45,7 +46,8 @@ const Checkout: React.FC = () => {
       navigate('/cart');
     }
     loadSettings();
-  }, [items, navigate, orderCompleted]);
+    checkShippingExclusion();
+  }, [items, navigate, orderCompleted, sessionId]);
 
   const loadSettings = async () => {
     try {
@@ -59,10 +61,22 @@ const Checkout: React.FC = () => {
     }
   };
 
+  const checkShippingExclusion = async () => {
+    if (!sessionId) return;
+    
+    try {
+      const response = await cartAPI.checkShipping(sessionId);
+      setHasShippingExcludedItems(response.data.hasShippingExcludedItems);
+    } catch (error) {
+      console.warn('檢查免運排除商品失敗:', error);
+      // 使用默認值，不影響頁面功能
+    }
+  };
+
   const calculateTotals = () => {
     const subtotal = totalAmount;
-    // 根據免運費門檻計算運費
-    const shipping = subtotal >= freeShippingThreshold ? 0 : 60; // 7-11取貨運費
+    // 根據免運費門檻和排除免運商品計算運費
+    const shipping = (subtotal >= freeShippingThreshold && !hasShippingExcludedItems) ? 0 : 60; // 7-11取貨運費
     const discount = appliedCoupon?.discountAmount || 0;
     const finalTotal = subtotal + shipping - discount;
     

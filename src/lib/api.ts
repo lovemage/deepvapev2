@@ -152,6 +152,8 @@ export const cartAPI = {
   removeCartItem: (id: string) => api.delete(`/cart/${id}`),
   
   clearCart: (sessionId: string) => api.delete(`/cart/clear/${sessionId}`),
+  
+  checkShipping: (sessionId: string) => api.get(`/cart/check-shipping/${sessionId}`),
 };
 
 // 優惠券相關API

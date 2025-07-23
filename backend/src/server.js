@@ -252,6 +252,7 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
     console.log('🔄 執行數據庫遷移...');
     require('./scripts/migrate-add-discontinued.js');
     require('./scripts/migrate-add-coupon-excluded.js');
+    require('./scripts/migrate-add-shipping-excluded.js');
     console.log('✅ 數據庫遷移完成');
     
     // 檢查是否需要強制重設管理員

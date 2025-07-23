@@ -14,6 +14,7 @@ export interface Product {
   stock: number;
   is_discontinued?: boolean;
   coupon_excluded?: boolean;
+  shipping_excluded?: boolean;
   created_at: string;
   variants?: ProductVariant[];
 }

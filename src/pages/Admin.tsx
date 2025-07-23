@@ -493,6 +493,20 @@ const AdminPage: React.FC = () => {
           排除優惠券 (勾選後此商品無法使用優惠券)
         </label>
       </div>
+
+      {/* 免運排除 */}
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="shipping_excluded"
+          checked={productForm.shipping_excluded || false}
+          onChange={e => setProductForm({...productForm, shipping_excluded: e.target.checked})}
+          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+        />
+        <label htmlFor="shipping_excluded" className="text-sm font-medium text-gray-700">
+          排除免運 (勾選後此商品無法享受免運優惠)
+        </label>
+      </div>
       <Button type="submit" className="w-full">{editingProduct ? '更新' : '新增'}</Button>
       {editingProduct && <Button variant="outline" className="w-full" onClick={() => {setEditingProduct(null); setProductForm({});}}>取消</Button>}
     </form>,
@@ -589,6 +603,11 @@ const AdminPage: React.FC = () => {
                     {p.coupon_excluded && (
                       <Badge variant="outline" className="text-orange-600 border-orange-600 text-xs">
                         無優惠券
+                      </Badge>
+                    )}
+                    {p.shipping_excluded && (
+                      <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs">
+                        無免運
                       </Badge>
                     )}
                   </div>
