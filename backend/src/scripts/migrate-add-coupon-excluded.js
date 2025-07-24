@@ -1,67 +1,129 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// 使用與 db.js 相同的路徑邏輯
 let dbPath;
-if (process.env.NODE_ENV === 'production') {
+
+if (process.env.RAILWAY_DEPLOYMENT_ID) {
+  // Railway 生產環境
   dbPath = process.env.DATABASE_PATH || '/app/data/vape_store.db';
 } else {
+  // 本地環境
   dbPath = path.join(__dirname, '../../database/vape_store.db');
 }
 
-console.log(`🔄 數據庫遷移: 添加 coupon_excluded 字段`);
-console.log(`📍 數據庫路徑: ${dbPath}`);
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('❌ 數據庫連接失敗:', err.message);
+    process.exit(1);
+  } else {
+    console.log('✅ 成功連接到數據庫');
+  }
+});
 
-const db = new sqlite3.Database(dbPath);
+// 封裝Promise方法
+const dbAsync = {
+  get: (sql, params = []) => {
+    return new Promise((resolve, reject) => {
+      db.get(sql, params, (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  },
 
-db.serialize(() => {
-  // 檢查字段是否已存在
-  db.all("PRAGMA table_info(products)", (err, columns) => {
-    if (err) {
-      console.error('❌ 檢查表結構失敗:', err);
-      return;
-    }
+  all: (sql, params = []) => {
+    return new Promise((resolve, reject) => {
+      db.all(sql, params, (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+    });
+  },
+
+  run: (sql, params = []) => {
+    return new Promise((resolve, reject) => {
+      db.run(sql, params, function(err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(this);
+        }
+      });
+    });
+  }
+};
+
+const addCouponExcludedColumn = async () => {
+  try {
+    console.log('🔄 開始添加 coupon_excluded 字段到 products 表...');
     
-    const hasCouponExcludedField = columns.some(col => col.name === 'coupon_excluded');
+    await dbAsync.run('BEGIN TRANSACTION');
+    
+    // 先檢查字段是否已經存在
+    const tableInfo = await dbAsync.all(`PRAGMA table_info(products)`);
+    const hasCouponExcludedField = tableInfo.some(col => col.name === 'coupon_excluded');
     
     if (hasCouponExcludedField) {
-      console.log('✅ coupon_excluded 字段已存在，無需遷移');
-      db.close();
+      console.log('✅ coupon_excluded 字段已存在，跳過遷移');
+      await dbAsync.run('COMMIT');
       return;
     }
     
-    console.log('📝 添加 coupon_excluded 字段...');
+    // 添加 coupon_excluded 字段
+    await dbAsync.run(`
+      ALTER TABLE products 
+      ADD COLUMN coupon_excluded BOOLEAN DEFAULT 0
+    `);
     
-    // 添加字段
-    db.run(`ALTER TABLE products ADD COLUMN coupon_excluded BOOLEAN DEFAULT 0`, (err) => {
+    console.log('✅ 成功添加 coupon_excluded 字段');
+    
+    // 驗證字段是否添加成功
+    const newTableInfo = await dbAsync.all(`PRAGMA table_info(products)`);
+    const couponExcludedField = newTableInfo.find(col => col.name === 'coupon_excluded');
+    
+    if (couponExcludedField) {
+      console.log('✅ 字段添加驗證成功');
+      console.log(`   字段類型: ${couponExcludedField.type}`);
+      console.log(`   默認值: ${couponExcludedField.dflt_value}`);
+    } else {
+      throw new Error('字段添加驗證失敗');
+    }
+    
+    await dbAsync.run('COMMIT');
+    console.log('🎉 coupon_excluded 字段遷移完成！');
+    
+  } catch (error) {
+    await dbAsync.run('ROLLBACK');
+    console.error('❌ 添加 coupon_excluded 字段失敗:', error);
+    throw error;
+  } finally {
+    db.close((err) => {
       if (err) {
-        console.error('❌ 添加字段失敗:', err);
+        console.error('❌ 關閉數據庫連接失敗:', err);
       } else {
-        console.log('✅ 成功添加 coupon_excluded 字段');
-        
-        // 驗證字段添加成功
-        db.all("PRAGMA table_info(products)", (err, newColumns) => {
-          if (err) {
-            console.error('❌ 驗證失敗:', err);
-          } else {
-            const couponExcludedField = newColumns.find(col => col.name === 'coupon_excluded');
-            if (couponExcludedField) {
-              console.log('✅ 字段驗證成功:', couponExcludedField);
-              console.log('🎉 數據庫遷移完成！');
-            } else {
-              console.error('❌ 字段驗證失敗');
-            }
-          }
-          
-          db.close((err) => {
-            if (err) {
-              console.error('❌ 關閉數據庫失敗:', err);
-            } else {
-              console.log('✅ 數據庫連接已關閉');
-            }
-          });
-        });
+        console.log('✅ 數據庫連接已關閉');
       }
     });
-  });
-});
+  }
+};
+
+// 如果直接運行此腳本，執行遷移
+if (require.main === module) {
+  addCouponExcludedColumn()
+    .then(() => {
+      console.log('✅ 遷移腳本執行完成');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('❌ 遷移失敗:', error);
+      process.exit(1);
+    });
+}
+
+module.exports = addCouponExcludedColumn;

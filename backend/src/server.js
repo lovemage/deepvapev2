@@ -250,9 +250,13 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
 
     // 執行數據庫遷移
     console.log('🔄 執行數據庫遷移...');
-    require('./scripts/migrate-add-discontinued.js');
-    require('./scripts/migrate-add-coupon-excluded.js');
-    require('./scripts/migrate-add-shipping-excluded.js');
+    const migrateDiscontinued = require('./scripts/migrate-add-discontinued.js');
+    const migrateCouponExcluded = require('./scripts/migrate-add-coupon-excluded.js');
+    const migrateShippingExcluded = require('./scripts/migrate-add-shipping-excluded.js');
+    
+    await migrateDiscontinued();
+    await migrateCouponExcluded();
+    await migrateShippingExcluded();
     console.log('✅ 數據庫遷移完成');
     
     // 檢查是否需要強制重設管理員
