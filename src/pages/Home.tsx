@@ -29,9 +29,9 @@ const Home: React.FC = () => {
   const featuredRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // 檢查是否已經驗證過年齡，並且彈窗是否啟用
-    const ageVerified = localStorage.getItem('ageVerified');
-    if (!ageVerified && popupEnabled) {
+    // 檢查是否已經查看過彈窗，並且彈窗是否啟用
+    const popupViewed = localStorage.getItem('popupViewed');
+    if (!popupViewed && popupEnabled) {
       setShowAgeVerification(true);
     }
     loadFeaturedProducts();
@@ -121,15 +121,10 @@ const Home: React.FC = () => {
     navigate(`/products?brand=${encodeURIComponent(brand)}`);
   };
 
-  const handleAgeConfirm = (isAdult: boolean) => {
-    if (isAdult) {
-      localStorage.setItem('ageVerified', 'true');
-      setShowAgeVerification(false);
-    } else {
-      // 如果未滿18歲，重定向到其他頁面或顯示警告
-      alert('很抱歉，本網站僅供18歲以上人士使用');
-      window.location.href = 'https://www.google.com';
-    }
+  // 移除年齡驗證，只處理彈窗關閉
+  const handlePopupClose = () => {
+    setShowAgeVerification(false);
+    localStorage.setItem('popupViewed', 'true');
   };
 
 
@@ -339,14 +334,14 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Age Verification Modal */}
+      {/* Promotion Popup Modal */}
       <Dialog open={showAgeVerification} onOpenChange={() => {}}>
         <DialogContent className="max-w-[90vw] sm:max-w-[400px] p-0 overflow-hidden bg-[#c8302e]">
           <DialogTitle className="sr-only">
-            年齡驗證 - DEEPVAPE 優惠活動
+            DEEPVAPE 優惠活動
           </DialogTitle>
           <DialogDescription className="sr-only">
-            未滿18歲禁止進入，請確認您的年齡並獲取優惠碼
+            獲取專屬優惠碼
           </DialogDescription>
           <div className="relative">
             <img 
@@ -356,7 +351,7 @@ const Home: React.FC = () => {
             />
             <div className="p-4 sm:p-6 bg-white">
               <p className="text-gray-700 text-center mb-3 sm:mb-4 font-medium text-sm sm:text-base">
-                未滿18歲禁止進入
+                獲取專屬優惠碼
               </p>
               <div className="bg-gray-100 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                 <p className="text-xs sm:text-sm text-gray-600 mb-2 text-center">優惠碼</p>
@@ -379,21 +374,13 @@ const Home: React.FC = () => {
                   </Button>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
+              <div className="flex justify-center">
                 <Button
-                  onClick={() => handleAgeConfirm(true)}
-                  className="bg-[#c8302e] hover:bg-[#a02825] text-white px-4 sm:px-6 text-sm sm:text-base"
+                  onClick={handlePopupClose}
+                  className="bg-[#c8302e] hover:bg-[#a02825] text-white px-6 sm:px-8 text-sm sm:text-base"
                   size="sm"
                 >
-                  我已滿18歲
-                </Button>
-                <Button
-                  onClick={() => handleAgeConfirm(false)}
-                  variant="outline"
-                  className="border-[#c8302e] text-[#c8302e] hover:bg-[#c8302e] hover:text-white px-4 sm:px-6 text-sm sm:text-base"
-                  size="sm"
-                >
-                  我未滿18歲
+                  關閉
                 </Button>
               </div>
             </div>
