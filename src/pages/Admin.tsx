@@ -794,14 +794,23 @@ const AdminPage: React.FC = () => {
                 />
                 <p className="text-xs text-gray-500">建議圖片尺寸: 400x600px 或相似比例</p>
               </div>
-              <div className="space-y-2">
-                <Label>優惠碼</Label>
-                <Input 
-                  value={settingsForm.popup_coupon_code || ''} 
-                  onChange={e => setSettingsForm({...settingsForm, popup_coupon_code: e.target.value})} 
-                  placeholder="顯示在彈窗中的優惠碼"
-                />
-              </div>
+                             <div className="space-y-2">
+                 <Label>優惠碼</Label>
+                 <Input 
+                   value={settingsForm.popup_coupon_code || ''} 
+                   onChange={e => setSettingsForm({...settingsForm, popup_coupon_code: e.target.value})} 
+                   placeholder="顯示在彈窗中的優惠碼"
+                 />
+               </div>
+               <div className="space-y-2">
+                 <Label>Line官方帳號連結</Label>
+                 <Input 
+                   value={settingsForm.popup_line_url || ''} 
+                   onChange={e => setSettingsForm({...settingsForm, popup_line_url: e.target.value})} 
+                   placeholder="Line官方帳號URL，例如：https://line.me/ti/p/YOUR_LINE_ID"
+                 />
+                 <p className="text-xs text-gray-500">用戶點擊「加入Line獲取優惠」時將跳轉到此連結</p>
+               </div>
               {settingsForm.popup_image_url && (
                 <div className="space-y-2">
                   <Label>預覽</Label>

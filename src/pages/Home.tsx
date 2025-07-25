@@ -26,6 +26,7 @@ const Home: React.FC = () => {
   const [popupImageUrl, setPopupImageUrl] = useState<string>('/dpprompt.png');
   const [popupEnabled, setPopupEnabled] = useState(true);
   const [popupCouponCode, setPopupCouponCode] = useState('DEEP2025');
+  const [popupLineUrl, setPopupLineUrl] = useState('https://line.me/ti/p/YOUR_LINE_ID');
   const featuredRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -77,6 +78,9 @@ const Home: React.FC = () => {
       setPopupEnabled(response.data.popup_enabled === 'true');
       if (response.data.popup_coupon_code) {
         setPopupCouponCode(response.data.popup_coupon_code);
+      }
+      if (response.data.popup_line_url) {
+        setPopupLineUrl(response.data.popup_line_url);
       }
 
       // 載入商品顯示設置
@@ -374,10 +378,21 @@ const Home: React.FC = () => {
                   </Button>
                 </div>
               </div>
-              <div className="flex justify-center">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
+                <Button
+                  onClick={() => window.open(popupLineUrl, '_blank')}
+                  className="bg-[#00B900] hover:bg-[#009900] text-white px-4 sm:px-6 text-sm sm:text-base flex items-center justify-center gap-2"
+                  size="sm"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.594.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+                  </svg>
+                  加入Line獲取優惠
+                </Button>
                 <Button
                   onClick={handlePopupClose}
-                  className="bg-[#c8302e] hover:bg-[#a02825] text-white px-6 sm:px-8 text-sm sm:text-base"
+                  variant="outline"
+                  className="border-[#c8302e] text-[#c8302e] hover:bg-[#c8302e] hover:text-white px-4 sm:px-6 text-sm sm:text-base"
                   size="sm"
                 >
                   關閉

@@ -110,6 +110,7 @@ const createTables = async () => {
       ('popup_image_url', '/dpprompt.png'),
       ('popup_enabled', 'true'),
       ('popup_coupon_code', 'DEEP2025'),
+      ('popup_line_url', 'https://line.me/ti/p/YOUR_LINE_ID'),
       ('show_product_preview', 'true')
     `);
 
