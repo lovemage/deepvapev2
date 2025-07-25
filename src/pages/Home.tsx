@@ -23,18 +23,21 @@ const Home: React.FC = () => {
   const [carouselImages, setCarouselImages] = useState<string[]>([]);
   const [carouselEnabled, setCarouselEnabled] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [popupImageUrl, setPopupImageUrl] = useState<string>('/dpprompt.png');
+  const [popupEnabled, setPopupEnabled] = useState(true);
+  const [popupCouponCode, setPopupCouponCode] = useState('DEEP2025');
   const featuredRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // 檢查是否已經驗證過年齡
+    // 檢查是否已經驗證過年齡，並且彈窗是否啟用
     const ageVerified = localStorage.getItem('ageVerified');
-    if (!ageVerified) {
+    if (!ageVerified && popupEnabled) {
       setShowAgeVerification(true);
     }
     loadFeaturedProducts();
     loadBrands();
     loadSettings();
-  }, []);
+  }, [popupEnabled]);
 
   // 輪播圖片自動切換
   useEffect(() => {
@@ -65,6 +68,15 @@ const Home: React.FC = () => {
           setCarouselImages(images);
           setCarouselEnabled(true);
         }
+      }
+
+      // 載入彈窗設置
+      if (response.data.popup_image_url) {
+        setPopupImageUrl(response.data.popup_image_url);
+      }
+      setPopupEnabled(response.data.popup_enabled === 'true');
+      if (response.data.popup_coupon_code) {
+        setPopupCouponCode(response.data.popup_coupon_code);
       }
 
       // 載入商品顯示設置
@@ -338,7 +350,7 @@ const Home: React.FC = () => {
           </DialogDescription>
           <div className="relative">
             <img 
-              src="/dpprompt.png" 
+              src={popupImageUrl} 
               alt="DEEPVAPE NEW OPEN 優惠" 
               className="w-full h-auto"
             />
@@ -351,13 +363,13 @@ const Home: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    value="DEEP2025"
+                    value={popupCouponCode}
                     readOnly
                     className="flex-1 px-2 sm:px-3 py-2 bg-white border border-gray-300 rounded-md text-center font-bold text-base sm:text-lg"
                   />
                   <Button
                     onClick={() => {
-                      navigator.clipboard.writeText('DEEP2025');
+                      navigator.clipboard.writeText(popupCouponCode);
                       alert('優惠碼已複製！');
                     }}
                     className="bg-[#c8302e] hover:bg-[#a02825] text-white text-sm sm:text-base px-3 sm:px-4"

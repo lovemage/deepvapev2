@@ -107,6 +107,9 @@ const createTables = async () => {
       ('telegram_chat_id', ''),
       ('hero_image_url', '/images/itay-kabalo-b3sel60dv8a-unsplash.jpg'),
       ('show_product_reviews', 'true'),
+      ('popup_image_url', '/dpprompt.png'),
+      ('popup_enabled', 'true'),
+      ('popup_coupon_code', 'DEEP2025'),
       ('show_product_preview', 'true')
     `);
 

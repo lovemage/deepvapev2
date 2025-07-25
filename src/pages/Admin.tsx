@@ -767,6 +767,64 @@ const AdminPage: React.FC = () => {
             </div>
           </div>
 
+          {/* 彈窗設置 */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">首頁彈窗設置</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base">啟用首頁彈窗</Label>
+                  <p className="text-sm text-gray-500">首次進入網站時顯示年齡驗證和優惠碼彈窗</p>
+                </div>
+                <Switch
+                  checked={settingsForm.popup_enabled === 'true'}
+                  onCheckedChange={(checked) =>
+                    setTimeout(() => {
+                      setSettingsForm({...settingsForm, popup_enabled: checked.toString()})
+                    }, 0)
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>彈窗圖片 URL</Label>
+                <Input 
+                  value={settingsForm.popup_image_url || ''} 
+                  onChange={e => setSettingsForm({...settingsForm, popup_image_url: e.target.value})} 
+                  placeholder="彈窗圖片URL，例如：/images/popup.png"
+                />
+                <p className="text-xs text-gray-500">建議圖片尺寸: 400x600px 或相似比例</p>
+              </div>
+              <div className="space-y-2">
+                <Label>優惠碼</Label>
+                <Input 
+                  value={settingsForm.popup_coupon_code || ''} 
+                  onChange={e => setSettingsForm({...settingsForm, popup_coupon_code: e.target.value})} 
+                  placeholder="顯示在彈窗中的優惠碼"
+                />
+              </div>
+              {settingsForm.popup_image_url && (
+                <div className="space-y-2">
+                  <Label>預覽</Label>
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <img
+                      src={settingsForm.popup_image_url}
+                      alt="彈窗圖片預覽"
+                      className="max-w-full h-auto max-h-48 mx-auto rounded-md"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/placeholder.png';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>提示：</strong> 彈窗圖片建議使用高質量的圖片，確保在手機和桌面設備上都能清晰顯示。圖片會自動適應彈窗大小。
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Telegram 通知設置 */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900">Telegram 通知設置</h3>
