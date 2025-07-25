@@ -358,7 +358,7 @@ const Home: React.FC = () => {
                 獲取專屬優惠碼
               </p>
               <div className="bg-gray-100 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                <p className="text-xs sm:text-sm text-gray-600 mb-2 text-center">優惠碼</p>
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 text-center">Line ID</p>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
