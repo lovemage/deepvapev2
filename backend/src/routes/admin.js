@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { dbAsync } = require('../database/db');
+const XLSX = require('xlsx');
 const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
