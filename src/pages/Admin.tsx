@@ -305,6 +305,36 @@ const AdminPage: React.FC = () => {
       setSelectedOrders(prev => prev.filter(id => id !== orderId));
     }
   };
+
+  const handleExportExcel = async () => {
+    try {
+      const response = await adminAPI.exportOrdersExcel();
+      
+      // 創建下載連結
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const filename = `訂單數據_${new Date().toISOString().split('T')[0]}.xlsx`;
+      link.setAttribute('download', filename);
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // 清理
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast({ title: 'Excel文件下載成功！' });
+    } catch (error: any) {
+      console.error('導出Excel失敗:', error);
+      toast({ 
+        title: '導出失敗', 
+        description: error.message || '導出Excel時發生錯誤', 
+        variant: 'destructive' 
+      });
+    }
+  };
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordChangeForm.newPassword !== passwordChangeForm.confirmPassword) {
@@ -978,6 +1008,14 @@ const AdminPage: React.FC = () => {
                 <CardDescription>管理客戶訂單，查看詳情並進行批量操作</CardDescription>
               </div>
               <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleExportExcel}
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  導出Excel
+                </Button>
                 <Button 
                   variant="destructive" 
                   onClick={handleBatchDeleteOrders}

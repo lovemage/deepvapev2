@@ -1181,4 +1181,93 @@ router.get('/orders/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// 訂單管理 - 導出Excel
+router.get('/orders/export/excel', authenticateToken, async (req, res) => {
+  try {
+    // 獲取所有訂單和訂單項目
+    const orders = await dbAsync.all(`
+      SELECT 
+        o.*,
+        GROUP_CONCAT(
+          oi.product_name || 
+          CASE WHEN oi.variant_value IS NOT NULL 
+               THEN ' (' || oi.variant_value || ')' 
+               ELSE '' 
+          END || 
+          ' x' || oi.quantity,
+          '; '
+        ) as products_detail,
+        GROUP_CONCAT(oi.quantity, '; ') as quantities,
+        GROUP_CONCAT(oi.price, '; ') as unit_prices
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+    `);
+
+    // 準備Excel數據
+    const excelData = orders.map(order => ({
+      '訂單編號': order.order_number,
+      '客戶姓名': order.customer_name,
+      '聯絡電話': order.customer_phone,
+      'Line ID': order.customer_line_id || '',
+      '取貨方式': order.shipping_method || '7-11',
+      '門市名稱': order.shipping_store_name || '',
+      '門市編號': order.shipping_store_number || '',
+      '商品小計': order.subtotal,
+      '運費': order.shipping_fee,
+      '折扣': order.discount,
+      '總金額': order.total_amount,
+      '訂單狀態': order.status === 'pending' ? '待處理' : 
+                  order.status === 'completed' ? '已完成' : order.status,
+      '優惠券代碼': order.coupon_code || '',
+      '購買商品': order.products_detail || '',
+      '訂單時間': new Date(order.created_at).toLocaleString('zh-TW')
+    }));
+
+    // 創建工作簿
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // 設置列寬
+    const columnWidths = [
+      { wch: 15 }, // 訂單編號
+      { wch: 10 }, // 客戶姓名
+      { wch: 12 }, // 聯絡電話
+      { wch: 12 }, // Line ID
+      { wch: 8 },  // 取貨方式
+      { wch: 15 }, // 門市名稱
+      { wch: 10 }, // 門市編號
+      { wch: 10 }, // 商品小計
+      { wch: 8 },  // 運費
+      { wch: 8 },  // 折扣
+      { wch: 10 }, // 總金額
+      { wch: 8 },  // 訂單狀態
+      { wch: 12 }, // 優惠券代碼
+      { wch: 30 }, // 購買商品
+      { wch: 18 }  // 訂單時間
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(workbook, worksheet, '訂單列表');
+
+    // 生成Excel緩衝區
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    // 設置響應頭
+    const filename = `訂單數據_${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
+    res.setHeader('Content-Length', excelBuffer.length);
+
+    // 發送Excel文件
+    res.send(excelBuffer);
+
+  } catch (error) {
+    console.error('導出Excel失敗:', error);
+    res.status(500).json({ error: '導出Excel失敗' });
+  }
+});
+
 module.exports = router;

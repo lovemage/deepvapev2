@@ -302,6 +302,9 @@ export const adminAPI = {
   
   batchDeleteOrders: (orderIds: number[]) => 
     api.delete('/admin/orders/batch', { data: { orderIds } }),
+  
+  exportOrdersExcel: () =>
+    api.get('/admin/orders/export/excel', { responseType: 'blob' }),
 };
 
 // 系統設置相關API (公開)
