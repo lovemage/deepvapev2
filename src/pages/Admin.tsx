@@ -23,6 +23,7 @@ import {
   Wrench,
   KeyRound,
   Trash2,
+  FileText,
   Pencil,
   PlusCircle,
   ChevronRight,
