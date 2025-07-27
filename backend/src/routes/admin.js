@@ -1079,4 +1079,106 @@ router.post('/test-telegram', authenticateToken, async (req, res) => {
   }
 });
 
+// 訂單管理 - 獲取所有訂單
+router.get('/orders', authenticateToken, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    // 獲取訂單列表，包含訂單項目
+    const orders = await dbAsync.all(`
+      SELECT 
+        o.*,
+        GROUP_CONCAT(
+          oi.product_name || 
+          CASE WHEN oi.variant_value IS NOT NULL 
+               THEN ' (' || oi.variant_value || ')' 
+               ELSE '' 
+          END || 
+          ' x' || oi.quantity,
+          ', '
+        ) as products
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    // 獲取總數量
+    const totalResult = await dbAsync.get('SELECT COUNT(*) as total FROM orders');
+    const total = totalResult.total;
+
+    res.json({
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('獲取訂單列表失敗:', error);
+    res.status(500).json({ error: '獲取訂單列表失敗' });
+  }
+});
+
+// 訂單管理 - 批量刪除訂單
+router.delete('/orders/batch', authenticateToken, async (req, res) => {
+  try {
+    const { orderIds } = req.body;
+    
+    if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+      return res.status(400).json({ error: '請提供有效的訂單ID列表' });
+    }
+
+    await dbAsync.run('BEGIN TRANSACTION');
+
+    // 刪除訂單項目（由於外鍵約束，這會自動級聯刪除）
+    for (const orderId of orderIds) {
+      await dbAsync.run('DELETE FROM orders WHERE id = ?', [orderId]);
+    }
+
+    await dbAsync.run('COMMIT');
+
+    res.json({ 
+      message: `成功刪除 ${orderIds.length} 個訂單`,
+      deletedCount: orderIds.length
+    });
+  } catch (error) {
+    await dbAsync.run('ROLLBACK');
+    console.error('批量刪除訂單失敗:', error);
+    res.status(500).json({ error: '批量刪除訂單失敗' });
+  }
+});
+
+// 訂單管理 - 單個訂單詳情
+router.get('/orders/:id', authenticateToken, async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    // 獲取訂單基本信息
+    const order = await dbAsync.get('SELECT * FROM orders WHERE id = ?', [orderId]);
+    
+    if (!order) {
+      return res.status(404).json({ error: '訂單不存在' });
+    }
+
+    // 獲取訂單項目詳情
+    const orderItems = await dbAsync.all(`
+      SELECT * FROM order_items WHERE order_id = ?
+    `, [orderId]);
+
+    res.json({
+      order,
+      items: orderItems
+    });
+  } catch (error) {
+    console.error('獲取訂單詳情失敗:', error);
+    res.status(500).json({ error: '獲取訂單詳情失敗' });
+  }
+});
+
 module.exports = router;

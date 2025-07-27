@@ -292,6 +292,16 @@ export const adminAPI = {
   
   // 圖片管理
   getImages: () => api.get('/admin/images'),
+
+  // 訂單管理
+  getOrders: (params?: { page?: number; limit?: number }) => 
+    api.get('/admin/orders', { params }),
+  
+  getOrderDetail: (id: number) => 
+    api.get(`/admin/orders/${id}`),
+  
+  batchDeleteOrders: (orderIds: number[]) => 
+    api.delete('/admin/orders/batch', { data: { orderIds } }),
 };
 
 // 系統設置相關API (公開)

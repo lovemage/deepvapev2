@@ -69,6 +69,19 @@ interface Variant { id: number; product_id: number; variant_type: string; varian
 interface Coupon { id: number; code: string; type: 'percentage' | 'fixed'; value: number; min_amount: number; expires_at: string; is_active: boolean; }
 interface Announcement { id: number; title: string; content: string; type: 'info' | 'warning' | 'promotion'; is_active: boolean; }
 interface AdminUser { id: number; username: string; created_at: string; }
+interface Order { 
+  id: number; 
+  order_number: string; 
+  customer_name: string; 
+  customer_phone: string; 
+  customer_line_id?: string;
+  shipping_store_name?: string;
+  shipping_store_number?: string;
+  total_amount: number; 
+  status: string; 
+  products: string;
+  created_at: string; 
+}
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
@@ -109,6 +122,9 @@ const AdminPage: React.FC = () => {
     newPassword: '',
     confirmPassword: '',
   });
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
+  const [orderPagination, setOrderPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
   const [productSortBy, setProductSortBy] = useState('created_at');
   const [productSortOrder, setProductSortOrder] = useState('desc');
   const [isReordering, setIsReordering] = useState(false);
@@ -118,9 +134,10 @@ const AdminPage: React.FC = () => {
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const [stats, imgs, prods, coups, ancs, adms, sets] = await Promise.all([
+      const [stats, imgs, prods, coups, ancs, adms, sets, ords] = await Promise.all([
         getDashboardStats(), getImages(), adminAPI.getProducts({ limit: 1000, sort: productSortBy, order: productSortOrder }),
-        adminAPI.getCoupons(), adminAPI.getAnnouncements(), adminAPI.getAdmins(), adminAPI.getSettings()
+        adminAPI.getCoupons(), adminAPI.getAnnouncements(), adminAPI.getAdmins(), adminAPI.getSettings(),
+        adminAPI.getOrders({ page: orderPagination.page, limit: orderPagination.limit })
       ]);
       setDashboardData(stats);
       setImages(imgs.success ? imgs.images : []);
@@ -130,6 +147,8 @@ const AdminPage: React.FC = () => {
       setAdmins(adms.data || []);
       setSettings(sets.data || {});
       setSettingsForm(Object.entries(sets.data).reduce((acc, [key, val]:[string, any]) => ({ ...acc, [key]: val.value }), {}));
+      setOrders(ords.data.orders || []);
+      setOrderPagination(ords.data.pagination || { page: 1, limit: 20, total: 0, totalPages: 0 });
     } catch (err: any) {
       setError(err.message || '載入資料時發生錯誤');
       if (err.response?.status === 401) { logout(); navigate('/admin'); }
@@ -252,6 +271,38 @@ const AdminPage: React.FC = () => {
         setAdminForm({ username: '', password: '' });
         fetchAllData();
     } catch(err: any) { toast({ title: '新增失敗', description: err.message, variant: 'destructive' }); }
+  };
+
+  const handleBatchDeleteOrders = async () => {
+    if (selectedOrders.length === 0) {
+      toast({ title: '請選擇要刪除的訂單', variant: 'destructive' });
+      return;
+    }
+    
+    try {
+      await adminAPI.batchDeleteOrders(selectedOrders);
+      toast({ title: `成功刪除 ${selectedOrders.length} 個訂單` });
+      setSelectedOrders([]);
+      fetchAllData();
+    } catch (err: any) {
+      toast({ title: '刪除失敗', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleSelectAllOrders = (checked: boolean) => {
+    if (checked) {
+      setSelectedOrders(orders.map(order => order.id));
+    } else {
+      setSelectedOrders([]);
+    }
+  };
+
+  const handleSelectOrder = (orderId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedOrders(prev => [...prev, orderId]);
+    } else {
+      setSelectedOrders(prev => prev.filter(id => id !== orderId));
+    }
   };
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -905,9 +956,10 @@ const AdminPage: React.FC = () => {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="dashboard"><Package className="mr-2 h-4 w-4"/>儀表板</TabsTrigger>
             <TabsTrigger value="products"><Boxes className="mr-2 h-4 w-4"/>產品</TabsTrigger>
+            <TabsTrigger value="orders"><FileText className="mr-2 h-4 w-4"/>訂單</TabsTrigger>
             <TabsTrigger value="variants"><Wrench className="mr-2 h-4 w-4"/>變體</TabsTrigger>
             <TabsTrigger value="coupons"><Ticket className="mr-2 h-4 w-4"/>優惠券</TabsTrigger>
             <TabsTrigger value="announcements"><Siren className="mr-2 h-4 w-4"/>公告</TabsTrigger>
@@ -916,6 +968,113 @@ const AdminPage: React.FC = () => {
         </TabsList>
         <TabsContent value="dashboard" className="mt-6">{renderDashboard()}</TabsContent>
         <TabsContent value="products" className="mt-6">{renderProductManagement()}</TabsContent>
+        
+        <TabsContent value="orders" className="mt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>訂單管理</CardTitle>
+                <CardDescription>管理客戶訂單，查看詳情並進行批量操作</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="destructive" 
+                  onClick={handleBatchDeleteOrders}
+                  disabled={selectedOrders.length === 0}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  刪除選中 ({selectedOrders.length})
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px]">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
+                    <input
+                      type="checkbox"
+                      checked={selectedOrders.length === orders.length && orders.length > 0}
+                      onChange={e => handleSelectAllOrders(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="font-medium text-sm">全選</span>
+                  </div>
+                  
+                  {orders.map(order => (
+                    <div key={order.id} className="p-4 border rounded-lg hover:bg-gray-50">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedOrders.includes(order.id)}
+                          onChange={e => handleSelectOrder(order.id, e.target.checked)}
+                          className="mt-1"
+                        />
+                        
+                        <div className="flex-1 space-y-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-lg">{order.order_number}</h3>
+                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <span>📅 {new Date(order.created_at).toLocaleString('zh-TW')}</span>
+                                <span className={`px-2 py-1 rounded text-xs ${
+                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {order.status === 'pending' ? '待處理' : 
+                                   order.status === 'completed' ? '已完成' : order.status}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-green-600">NT$ {order.total_amount}</div>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-1">客戶資料</h4>
+                              <div className="space-y-1 text-gray-600">
+                                <div>👤 {order.customer_name}</div>
+                                <div>📞 {order.customer_phone}</div>
+                                {order.customer_line_id && <div>💬 Line: {order.customer_line_id}</div>}
+                                {order.shipping_store_name && (
+                                  <div>🏪 {order.shipping_store_name} ({order.shipping_store_number})</div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-1">購買商品</h4>
+                              <div className="text-gray-600">
+                                {order.products || '無商品資料'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {orders.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      暫無訂單
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+              
+              {orderPagination.totalPages > 1 && (
+                <div className="flex justify-center mt-4">
+                  <div className="text-sm text-gray-600">
+                    第 {orderPagination.page} 頁，共 {orderPagination.totalPages} 頁 
+                    (總計 {orderPagination.total} 個訂單)
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
         <TabsContent value="variants" className="mt-6">{renderVariantManagement()}</TabsContent>
         <TabsContent value="coupons" className="mt-6">{renderCouponManagement()}</TabsContent>
         <TabsContent value="announcements" className="mt-6">{renderAnnouncementManagement()}</TabsContent>
