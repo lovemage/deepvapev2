@@ -161,7 +161,10 @@ router.get('/dashboard-stats', authenticateToken, async (req, res) => {
       totalProducts: 0,
       totalCoupons: 0,
       totalAnnouncements: 0,
-      activeProducts: 0
+      activeProducts: 0,
+      totalRevenue: 0,
+      totalOrders: 0,
+      averageOrderValue: 0
     };
     
     // 產品統計
@@ -178,6 +181,20 @@ router.get('/dashboard-stats', authenticateToken, async (req, res) => {
     // 公告統計
     const announcementCount = await dbAsync.get('SELECT COUNT(*) as count FROM announcements');
     stats.totalAnnouncements = announcementCount.count;
+    
+    // 營業額統計
+    const revenueStats = await dbAsync.get(`
+      SELECT 
+        COUNT(*) as total_orders,
+        COALESCE(SUM(total_amount), 0) as total_revenue,
+        COALESCE(AVG(total_amount), 0) as avg_order_value
+      FROM orders 
+      WHERE status = 'completed'
+    `);
+    
+    stats.totalOrders = revenueStats.total_orders;
+    stats.totalRevenue = revenueStats.total_revenue;
+    stats.averageOrderValue = revenueStats.avg_order_value;
     
     // 分類統計
     const categoryStats = await dbAsync.all(`
@@ -201,11 +218,42 @@ router.get('/dashboard-stats', authenticateToken, async (req, res) => {
       ORDER BY stock ASC
     `);
     
+    // 優惠券營業額統計
+    const couponRevenueStats = await dbAsync.all(`
+      SELECT 
+        c.code,
+        c.type,
+        c.value,
+        COUNT(o.id) as order_count,
+        COALESCE(SUM(o.total_amount), 0) as total_revenue,
+        COALESCE(AVG(o.total_amount), 0) as avg_order_value
+      FROM coupons c
+      LEFT JOIN orders o ON o.coupon_code = c.code AND o.status = 'completed'
+      WHERE c.is_active = 1
+      GROUP BY c.id, c.code, c.type, c.value
+      ORDER BY total_revenue DESC
+    `);
+    
+    // 每月營業額統計
+    const monthlyRevenueStats = await dbAsync.all(`
+      SELECT 
+        strftime('%Y-%m', created_at) as month,
+        COUNT(*) as order_count,
+        COALESCE(SUM(total_amount), 0) as total_revenue
+      FROM orders 
+      WHERE status = 'completed'
+      GROUP BY strftime('%Y-%m', created_at)
+      ORDER BY month DESC
+      LIMIT 12
+    `);
+    
     res.json({
       stats,
       categoryStats,
       brandStats,
-      lowStockProducts
+      lowStockProducts,
+      couponRevenueStats,
+      monthlyRevenueStats
     });
   } catch (error) {
     console.error('獲取儀表板數據失敗:', error);

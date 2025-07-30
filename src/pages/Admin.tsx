@@ -30,7 +30,10 @@ import {
   ArrowUp,
   ArrowDown,
   MoveVertical,
-  Save
+  Save,
+  DollarSign,
+  TrendingUp,
+  Calendar
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from "@/hooks/use-toast";
@@ -61,11 +64,39 @@ import { Switch } from '@/components/ui/switch';
 import ProductImageManager from '@/components/ProductImageManager';
 
 // --- Type Definitions ---
-interface DashboardStats { totalProducts: number; totalCoupons: number; totalAnnouncements: number; activeProducts: number; }
+interface DashboardStats { 
+  totalProducts: number; 
+  totalCoupons: number; 
+  totalAnnouncements: number; 
+  activeProducts: number;
+  totalRevenue: number;
+  totalOrders: number;
+  averageOrderValue: number;
+}
 interface CategoryStat { category: string; count: number; }
 interface BrandStat { brand: string; count: number; }
 interface LowStockProduct { name: string; stock: number; }
-interface DashboardData { stats: DashboardStats; categoryStats: CategoryStat[]; brandStats: BrandStat[]; lowStockProducts: LowStockProduct[]; }
+interface CouponRevenueStat { 
+  code: string; 
+  type: string; 
+  value: number; 
+  order_count: number; 
+  total_revenue: number; 
+  avg_order_value: number; 
+}
+interface MonthlyRevenueStat { 
+  month: string; 
+  order_count: number; 
+  total_revenue: number; 
+}
+interface DashboardData { 
+  stats: DashboardStats; 
+  categoryStats: CategoryStat[]; 
+  brandStats: BrandStat[]; 
+  lowStockProducts: LowStockProduct[];
+  couponRevenueStats: CouponRevenueStat[];
+  monthlyRevenueStats: MonthlyRevenueStat[];
+}
 type ImageFile = { name: string; path: string; };
 interface Variant { id: number; product_id: number; variant_type: string; variant_value: string; stock: number; price_modifier: number; }
 interface Coupon { id: number; code: string; type: 'percentage' | 'fixed'; value: number; min_amount: number; expires_at: string; is_active: boolean; }
@@ -460,8 +491,95 @@ const AdminPage: React.FC = () => {
   const renderDashboard = () => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
+          {/* 營業額統計 */}
           <Card>
-            <CardHeader><CardTitle>數據總覽</CardTitle></CardHeader>
+            <CardHeader><CardTitle>營業額統計</CardTitle></CardHeader>
+            <CardContent>
+              {dashboardData?.stats && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  {[
+                    {icon: DollarSign, label: '總營業額', value: `NT$ ${dashboardData.stats.totalRevenue.toLocaleString()}`, color: 'text-green-600'},
+                    {icon: FileText, label: '總訂單數', value: dashboardData.stats.totalOrders, color: 'text-blue-600'},
+                    {icon: TrendingUp, label: '平均訂單金額', value: `NT$ ${Math.round(dashboardData.stats.averageOrderValue).toLocaleString()}`, color: 'text-purple-600'},
+                    {icon: Package, label: '總產品數', value: dashboardData.stats.totalProducts, color: 'text-primary'},
+                  ].map(item => <div key={item.label} className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg"><item.icon className={`mx-auto h-8 w-8 ${item.color}`} /><p className="mt-2 text-lg font-bold">{item.value}</p><p className="text-sm text-muted-foreground">{item.label}</p></div>)}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 優惠券營業額統計 */}
+          <Card>
+            <CardHeader><CardTitle>優惠券營業額統計</CardTitle></CardHeader>
+            <CardContent>
+              {dashboardData?.couponRevenueStats && dashboardData.couponRevenueStats.length > 0 ? (
+                <div className="space-y-4">
+                  {dashboardData.couponRevenueStats.map((coupon, index) => (
+                    <div key={index} className="p-4 border rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{coupon.code}</Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {coupon.type === 'percentage' ? `${coupon.value}%` : `NT$ ${coupon.value}`}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-green-600">
+                            NT$ {coupon.total_revenue.toLocaleString()}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {coupon.order_count} 筆訂單
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        平均訂單金額: NT$ {Math.round(coupon.avg_order_value).toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  暫無優惠券營業額數據
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 每月營業額統計 */}
+          <Card>
+            <CardHeader><CardTitle>每月營業額統計</CardTitle></CardHeader>
+            <CardContent>
+              {dashboardData?.monthlyRevenueStats && dashboardData.monthlyRevenueStats.length > 0 ? (
+                <div className="space-y-3">
+                  {dashboardData.monthlyRevenueStats.map((month, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{month.month}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-green-600">
+                          NT$ {month.total_revenue.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {month.order_count} 筆訂單
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  暫無每月營業額數據
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 產品統計 */}
+          <Card>
+            <CardHeader><CardTitle>產品統計</CardTitle></CardHeader>
             <CardContent>
               {dashboardData?.stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -475,6 +593,7 @@ const AdminPage: React.FC = () => {
               )}
             </CardContent>
           </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card><CardHeader><CardTitle>各分類產品數</CardTitle></CardHeader><CardContent><ul className="space-y-2">{dashboardData?.categoryStats?.map(cat => <li key={cat.category} className="flex justify-between items-center"><span className="capitalize">{cat.category}</span><Badge variant="secondary">{cat.count}</Badge></li>)}</ul></CardContent></Card>
             <Card><CardHeader><CardTitle>各品牌產品數</CardTitle></CardHeader><CardContent><ul className="space-y-2">{dashboardData?.brandStats?.map(b => <li key={b.brand} className="flex justify-between items-center"><span>{b.brand}</span><Badge variant="secondary">{b.count}</Badge></li>)}</ul></CardContent></Card>
