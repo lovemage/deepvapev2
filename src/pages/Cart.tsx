@@ -100,6 +100,11 @@ const Cart: React.FC = () => {
       await cartAPI.updateCartItem(String(itemId), { quantity: newQuantity });
       await loadCart();
 
+      // 如果有套用優惠券，重新驗證
+      if (appliedCoupon) {
+        await revalidateCoupon();
+      }
+
       toast({
         title: "數量已更新",
         description: "商品數量已成功更新",
@@ -131,6 +136,11 @@ const Cart: React.FC = () => {
       console.log('正在刪除商品，ID:', String(itemId));
       await cartAPI.removeCartItem(String(itemId));
       await loadCart();
+
+      // 如果有套用優惠券，重新驗證
+      if (appliedCoupon) {
+        await revalidateCoupon();
+      }
 
       toast({
         title: "商品已移除",
@@ -190,6 +200,38 @@ const Cart: React.FC = () => {
       title: "優惠碼已移除",
       description: "已取消優惠碼套用",
     });
+  };
+
+  // 重新驗證優惠券
+  const revalidateCoupon = async () => {
+    if (!appliedCoupon || !sessionId) return;
+
+    try {
+      const response = await couponsAPI.validateCoupon({
+        code: appliedCoupon.coupon.code,
+        amount: totalAmount,
+        sessionId: sessionId
+      });
+      
+      setAppliedCoupon(response.data);
+      
+      // 如果折扣金額改變了，提示用戶
+      if (response.data.discountAmount !== appliedCoupon.discountAmount) {
+        toast({
+          title: "優惠券已重新計算",
+          description: `折扣金額已更新為 ${formatPrice(response.data.discountAmount)}`,
+        });
+      }
+    } catch (error: any) {
+      // 如果重新驗證失敗，移除優惠券
+      clearCoupon();
+      const errorMessage = error.response?.data?.error || '優惠券不再適用';
+      toast({
+        title: "優惠券已失效",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const clearCartItems = async () => {
