@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import ProductImageManager from '@/components/ProductImageManager';
 
 // --- Type Definitions ---
 interface DashboardStats { totalProducts: number; totalCoupons: number; totalAnnouncements: number; activeProducts: number; }
@@ -123,6 +124,7 @@ const AdminPage: React.FC = () => {
     newPassword: '',
     confirmPassword: '',
   });
+  const [productImages, setProductImages] = useState<Array<{ url: string; file?: File }>>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [orderPagination, setOrderPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
@@ -335,6 +337,25 @@ const AdminPage: React.FC = () => {
       });
     }
   };
+
+  const resetProductForm = () => {
+    setProductForm({});
+    setEditingProduct(null);
+    setProductImages([]);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setProductForm(product);
+    setEditingProduct(product);
+    // 設置產品圖片
+    if (product.images && product.images.length > 0) {
+      setProductImages(product.images.map(img => ({ url: img.image_url })));
+    } else if (product.image_url) {
+      setProductImages([{ url: product.image_url }]);
+    } else {
+      setProductImages([]);
+    }
+  };
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordChangeForm.newPassword !== passwordChangeForm.confirmPassword) {
@@ -539,13 +560,40 @@ const AdminPage: React.FC = () => {
   );
 
   const renderProductManagement = () => renderManagementUI('產品管理', products, 
-    <form onSubmit={async e => {e.preventDefault(); if (await createOrUpdate('Product', productForm, editingProduct)) {setEditingProduct(null); setProductForm({});}}} className="space-y-4">
+    <form onSubmit={async e => {
+      e.preventDefault(); 
+      const formDataWithImages = {
+        ...productForm,
+        images: productImages.map((img, index) => ({
+          url: img.url,
+          sort_order: index,
+          is_primary: index === 0
+        }))
+      };
+      if (await createOrUpdate('Product', formDataWithImages, editingProduct)) {
+        resetProductForm();
+      }
+    }} className="space-y-4">
       <Input placeholder="名稱" value={productForm.name || ''} onChange={e => setProductForm({...productForm, name: e.target.value})} required/>
       <Input placeholder="品牌" value={productForm.brand || ''} onChange={e => setProductForm({...productForm, brand: e.target.value})} required/>
       <Select value={productForm.category || ''} onValueChange={(v: any) => setProductForm({...productForm, category: v})}><SelectTrigger><SelectValue placeholder="分類" /></SelectTrigger><SelectContent><SelectItem value="host">主機</SelectItem><SelectItem value="cartridge">煙彈</SelectItem><SelectItem value="disposable">拋棄式</SelectItem><SelectItem value="oil">煙油</SelectItem></SelectContent></Select>
       <Input type="number" placeholder="價格" value={productForm.price || ''} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})} required/>
       <Input type="number" placeholder="庫存" value={productForm.stock || ''} onChange={e => setProductForm({...productForm, stock: Number(e.target.value)})} required/>
-      <Input placeholder="圖片 URL" value={productForm.image_url || ''} onChange={e => setProductForm({...productForm, image_url: e.target.value})} />
+      
+      {/* 多圖片管理 */}
+      <ProductImageManager
+        images={productImages}
+        onImagesChange={setProductImages}
+        maxImages={3}
+      />
+      
+      {/* 保留傳統圖片URL輸入框作為備用 */}
+      <div className="space-y-2">
+        <Label className="text-sm text-gray-600">或者使用圖片 URL (備用選項)</Label>
+        <Input placeholder="圖片 URL" value={productForm.image_url || ''} onChange={e => setProductForm({...productForm, image_url: e.target.value})} />
+        <p className="text-xs text-gray-500">如果上方沒有上傳圖片，將使用此URL作為圖片</p>
+      </div>
+      
       <Textarea placeholder="描述" value={productForm.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} />
 
       {/* 停賣狀態 */}
