@@ -207,38 +207,19 @@ const ProductDetail: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Product Image */}
         <div className="space-y-4">
-          <Card className="overflow-hidden">
-            <div 
-              className="relative bg-gray-100 cursor-pointer group flex items-center justify-center"
-              onClick={() => setIsImageZoomOpen(true)}
-            >
-              <OptimizedImage
-                src={getImageUrl(product.image_url)}
-                alt={product.name}
-                className="w-full h-96 md:h-[500px]"
-                width={640}
-                height={384}
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                objectFit="cover"
-                priority
-              />
-              
-              {/* Zoom Icon Overlay */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-3 shadow-lg">
-                  <ZoomIn className="h-6 w-6 text-gray-700" />
-                </div>
-              </div>
-              
-              {stockStatus.status === 'out-of-stock' && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none">
-                  <Badge variant="destructive" className="text-lg px-4 py-2">
-                    缺貨
-                  </Badge>
-                </div>
-              )}
+          <ProductImageCarousel 
+            images={product.images}
+            productName={product.name}
+            fallbackImage={product.image_url}
+          />
+          
+          {stockStatus.status === 'out-of-stock' && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none">
+              <Badge variant="destructive" className="text-lg px-4 py-2">
+                缺貨
+              </Badge>
             </div>
-          </Card>
+          )}
         </div>
 
         {/* Product Info */}

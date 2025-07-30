@@ -2,6 +2,15 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 
+// 產品圖片類型定義
+export interface ProductImage {
+  id: number;
+  product_id: number;
+  image_url: string;
+  sort_order: number;
+  is_primary: boolean;
+}
+
 // 產品類型定義
 export interface Product {
   id: number;
@@ -17,6 +26,7 @@ export interface Product {
   shipping_excluded?: boolean;
   created_at: string;
   variants?: ProductVariant[];
+  images?: ProductImage[];
 }
 
 export interface ProductVariant {
