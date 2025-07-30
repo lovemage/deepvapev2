@@ -182,14 +182,31 @@ router.get('/dashboard-stats', authenticateToken, async (req, res) => {
     const announcementCount = await dbAsync.get('SELECT COUNT(*) as count FROM announcements');
     stats.totalAnnouncements = announcementCount.count;
     
-    // 營業額統計
+    // 營業額統計 - 包含所有訂單
     const revenueStats = await dbAsync.get(`
       SELECT 
         COUNT(*) as total_orders,
         COALESCE(SUM(total_amount), 0) as total_revenue,
         COALESCE(AVG(total_amount), 0) as avg_order_value
+      FROM orders
+    `);
+    
+    // 已完成訂單統計
+    const completedStats = await dbAsync.get(`
+      SELECT 
+        COUNT(*) as completed_orders,
+        COALESCE(SUM(total_amount), 0) as completed_revenue
       FROM orders 
       WHERE status = 'completed'
+    `);
+    
+    // 待處理訂單統計
+    const pendingStats = await dbAsync.get(`
+      SELECT 
+        COUNT(*) as pending_orders,
+        COALESCE(SUM(total_amount), 0) as pending_revenue
+      FROM orders 
+      WHERE status = 'pending'
     `);
     
     stats.totalOrders = revenueStats.total_orders;
@@ -218,7 +235,7 @@ router.get('/dashboard-stats', authenticateToken, async (req, res) => {
       ORDER BY stock ASC
     `);
     
-    // 優惠券營業額統計
+    // 優惠券營業額統計 - 包含所有訂單
     const couponRevenueStats = await dbAsync.all(`
       SELECT 
         c.code,
@@ -228,20 +245,19 @@ router.get('/dashboard-stats', authenticateToken, async (req, res) => {
         COALESCE(SUM(o.total_amount), 0) as total_revenue,
         COALESCE(AVG(o.total_amount), 0) as avg_order_value
       FROM coupons c
-      LEFT JOIN orders o ON o.coupon_code = c.code AND o.status = 'completed'
+      LEFT JOIN orders o ON o.coupon_code = c.code
       WHERE c.is_active = 1
       GROUP BY c.id, c.code, c.type, c.value
       ORDER BY total_revenue DESC
     `);
     
-    // 每月營業額統計
+    // 每月營業額統計 - 包含所有訂單
     const monthlyRevenueStats = await dbAsync.all(`
       SELECT 
         strftime('%Y-%m', created_at) as month,
         COUNT(*) as order_count,
         COALESCE(SUM(total_amount), 0) as total_revenue
       FROM orders 
-      WHERE status = 'completed'
       GROUP BY strftime('%Y-%m', created_at)
       ORDER BY month DESC
       LIMIT 12

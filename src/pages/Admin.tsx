@@ -72,6 +72,10 @@ interface DashboardStats {
   totalRevenue: number;
   totalOrders: number;
   averageOrderValue: number;
+  completedOrders?: number;
+  completedRevenue?: number;
+  pendingOrders?: number;
+  pendingRevenue?: number;
 }
 interface CategoryStat { category: string; count: number; }
 interface BrandStat { brand: string; count: number; }
