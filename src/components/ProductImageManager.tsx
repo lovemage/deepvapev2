@@ -52,9 +52,9 @@ const ProductImageManager: React.FC<ProductImageManagerProps> = ({
         // 上傳圖片
         const response = await uploadImage(file);
         
-        if (response.data.success) {
+        if (response.success) {
           newImages.push({
-            url: response.data.filePath,
+            url: response.filePath,
             file
           });
         }
