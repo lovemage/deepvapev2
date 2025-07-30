@@ -403,7 +403,7 @@ router.put('/products/batch-stock', authenticateToken, async (req, res) => {
 // 創建產品
 router.post('/products', authenticateToken, async (req, res) => {
   try {
-    const { name, category, brand, price, description, image_url, stock, is_discontinued, coupon_excluded, shipping_excluded } = req.body;
+    const { name, category, brand, price, description, image_url, images = [], stock, is_discontinued, coupon_excluded, shipping_excluded } = req.body;
 
     if (!name || !category || !brand || !price) {
       return res.status(400).json({ error: '缺少必要參數' });
@@ -414,16 +414,45 @@ router.post('/products', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: '產品類別無效' });
     }
 
+    // 驗證圖片數量（最多3張）
+    if (images.length > 3) {
+      return res.status(400).json({ error: '每個產品最多只能上傳3張圖片' });
+    }
+
+    await dbAsync.run('BEGIN TRANSACTION');
+
     const result = await dbAsync.run(`
       INSERT INTO products (name, category, brand, price, description, image_url, stock, is_discontinued, coupon_excluded, shipping_excluded)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [name, category, brand, price, description || '', image_url || '', stock || 0, is_discontinued ? 1 : 0, coupon_excluded ? 1 : 0, shipping_excluded ? 1 : 0]);
 
+    const productId = result.lastID;
+
+    // 插入多張圖片
+    if (images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        await dbAsync.run(`
+          INSERT INTO product_images (product_id, image_url, sort_order, is_primary)
+          VALUES (?, ?, ?, ?)
+        `, [productId, image.url, i, i === 0 ? 1 : 0]);
+      }
+    } else if (image_url) {
+      // 向後兼容：如果沒有多圖片但有單圖片，則添加為主圖
+      await dbAsync.run(`
+        INSERT INTO product_images (product_id, image_url, sort_order, is_primary)
+        VALUES (?, ?, 0, 1)
+      `, [productId, image_url]);
+    }
+
+    await dbAsync.run('COMMIT');
+
     res.status(201).json({
-      id: result.id,
+      id: productId,
       message: '產品創建成功'
     });
   } catch (error) {
+    await dbAsync.run('ROLLBACK');
     console.error('創建產品失敗:', error);
     res.status(500).json({ error: '創建產品失敗' });
   }
@@ -433,7 +462,7 @@ router.post('/products', authenticateToken, async (req, res) => {
 router.put('/products/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, brand, price, description, image_url, stock, is_discontinued, coupon_excluded, shipping_excluded } = req.body;
+    const { name, category, brand, price, description, image_url, images = [], stock, is_discontinued, coupon_excluded, shipping_excluded } = req.body;
 
     if (!name || !category || !brand || !price) {
       return res.status(400).json({ error: '缺少必要參數' });
@@ -444,6 +473,13 @@ router.put('/products/:id', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: '產品類別無效' });
     }
 
+    // 驗證圖片數量（最多3張）
+    if (images.length > 3) {
+      return res.status(400).json({ error: '每個產品最多只能上傳3張圖片' });
+    }
+
+    await dbAsync.run('BEGIN TRANSACTION');
+
     const result = await dbAsync.run(`
       UPDATE products
       SET name = ?, category = ?, brand = ?, price = ?,
@@ -452,11 +488,30 @@ router.put('/products/:id', authenticateToken, async (req, res) => {
     `, [name, category, brand, price, description || '', image_url || '', stock || 0, is_discontinued ? 1 : 0, coupon_excluded ? 1 : 0, shipping_excluded ? 1 : 0, id]);
 
     if (result.changes === 0) {
+      await dbAsync.run('ROLLBACK');
       return res.status(404).json({ error: '產品不存在' });
     }
 
+    // 如果提供了新的圖片列表，更新圖片
+    if (images.length > 0) {
+      // 刪除舊圖片
+      await dbAsync.run('DELETE FROM product_images WHERE product_id = ?', [id]);
+      
+      // 插入新圖片
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        await dbAsync.run(`
+          INSERT INTO product_images (product_id, image_url, sort_order, is_primary)
+          VALUES (?, ?, ?, ?)
+        `, [id, image.url, i, i === 0 ? 1 : 0]);
+      }
+    }
+
+    await dbAsync.run('COMMIT');
+
     res.json({ message: '產品更新成功' });
   } catch (error) {
+    await dbAsync.run('ROLLBACK');
     console.error('更新產品失敗:', error);
     res.status(500).json({ error: '更新產品失敗' });
   }
@@ -1179,6 +1234,75 @@ router.get('/orders/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('獲取訂單詳情失敗:', error);
     res.status(500).json({ error: '獲取訂單詳情失敗' });
+  }
+});
+
+// 產品圖片管理 - 獲取產品圖片
+router.get('/products/:id/images', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const images = await dbAsync.all(`
+      SELECT * FROM product_images 
+      WHERE product_id = ? 
+      ORDER BY sort_order ASC
+    `, [id]);
+    
+    res.json({ images });
+  } catch (error) {
+    console.error('獲取產品圖片失敗:', error);
+    res.status(500).json({ error: '獲取產品圖片失敗' });
+  }
+});
+
+// 產品圖片管理 - 更新圖片排序
+router.put('/products/:id/images/order', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imageOrders } = req.body; // [{ id: 1, sort_order: 0 }, ...]
+    
+    if (!imageOrders || !Array.isArray(imageOrders)) {
+      return res.status(400).json({ error: '無效的圖片排序數據' });
+    }
+    
+    await dbAsync.run('BEGIN TRANSACTION');
+    
+    for (const order of imageOrders) {
+      await dbAsync.run(`
+        UPDATE product_images 
+        SET sort_order = ?, is_primary = ?
+        WHERE id = ? AND product_id = ?
+      `, [order.sort_order, order.sort_order === 0 ? 1 : 0, order.id, id]);
+    }
+    
+    await dbAsync.run('COMMIT');
+    
+    res.json({ message: '圖片排序更新成功' });
+  } catch (error) {
+    await dbAsync.run('ROLLBACK');
+    console.error('更新圖片排序失敗:', error);
+    res.status(500).json({ error: '更新圖片排序失敗' });
+  }
+});
+
+// 產品圖片管理 - 刪除圖片
+router.delete('/products/:productId/images/:imageId', authenticateToken, async (req, res) => {
+  try {
+    const { productId, imageId } = req.params;
+    
+    const result = await dbAsync.run(`
+      DELETE FROM product_images 
+      WHERE id = ? AND product_id = ?
+    `, [imageId, productId]);
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ error: '圖片不存在' });
+    }
+    
+    res.json({ message: '圖片刪除成功' });
+  } catch (error) {
+    console.error('刪除產品圖片失敗:', error);
+    res.status(500).json({ error: '刪除產品圖片失敗' });
   }
 });
 

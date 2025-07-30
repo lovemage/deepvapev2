@@ -58,6 +58,17 @@ router.get('/', async (req, res) => {
       `, productIds);
     }
     
+    // 批量獲取所有圖片數據（優化性能）
+    let allImages = [];
+    if (productIds.length > 0) {
+      const placeholders = productIds.map(() => '?').join(',');
+      allImages = await dbAsync.all(`
+        SELECT * FROM product_images 
+        WHERE product_id IN (${placeholders})
+        ORDER BY product_id, sort_order ASC
+      `, productIds);
+    }
+    
     // 將變體數據分組到對應的產品
     const variantMap = new Map();
     allVariants.forEach(variant => {
@@ -67,10 +78,29 @@ router.get('/', async (req, res) => {
       variantMap.get(variant.product_id).push(variant);
     });
     
-    const processedProducts = products.map(product => ({
-      ...product,
-      variants: variantMap.get(product.id) || []
-    }));
+    // 將圖片數據分組到對應的產品
+    const imageMap = new Map();
+    allImages.forEach(image => {
+      if (!imageMap.has(image.product_id)) {
+        imageMap.set(image.product_id, []);
+      }
+      imageMap.get(image.product_id).push(image);
+    });
+    
+    const processedProducts = products.map(product => {
+      const productImages = imageMap.get(product.id) || [];
+      // 設置主圖片（向後兼容）
+      const primaryImage = productImages.find(img => img.is_primary) || productImages[0];
+      if (primaryImage && !product.image_url) {
+        product.image_url = primaryImage.image_url;
+      }
+      
+      return {
+        ...product,
+        variants: variantMap.get(product.id) || [],
+        images: productImages
+      };
+    });
     
     // 獲取總數
     let countSql = 'SELECT COUNT(*) as total FROM products WHERE 1=1';
@@ -132,9 +162,23 @@ router.get('/:id', async (req, res) => {
       SELECT * FROM product_variants WHERE product_id = ?
     `, [id]);
     
+    // 獲取產品圖片
+    const images = await dbAsync.all(`
+      SELECT * FROM product_images 
+      WHERE product_id = ? 
+      ORDER BY sort_order ASC
+    `, [id]);
+    
+    // 設置主圖片（向後兼容）
+    const primaryImage = images.find(img => img.is_primary) || images[0];
+    if (primaryImage && !product.image_url) {
+      product.image_url = primaryImage.image_url;
+    }
+    
     res.json({
       ...product,
-      variants
+      variants,
+      images
     });
   } catch (error) {
     console.error('獲取產品詳情失敗:', error);

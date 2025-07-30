@@ -305,6 +305,16 @@ export const adminAPI = {
   
   exportOrdersExcel: () =>
     api.get('/admin/orders/export/excel', { responseType: 'blob' }),
+
+  // 產品圖片管理
+  getProductImages: (productId: number) =>
+    api.get(`/admin/products/${productId}/images`),
+  
+  updateProductImagesOrder: (productId: number, imageOrders: Array<{ id: number; sort_order: number }>) =>
+    api.put(`/admin/products/${productId}/images/order`, { imageOrders }),
+  
+  deleteProductImage: (productId: number, imageId: number) =>
+    api.delete(`/admin/products/${productId}/images/${imageId}`),
 };
 
 // 系統設置相關API (公開)

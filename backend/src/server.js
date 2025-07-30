@@ -248,16 +248,18 @@ const server = app.listen(PORT, '0.0.0.0', async () => {
     await initDb();
     console.log('✅ 數據庫初始化完成');
 
-    // 執行數據庫遷移
-    console.log('🔄 執行數據庫遷移...');
-    const migrateDiscontinued = require('./scripts/migrate-add-discontinued.js');
-    const migrateCouponExcluded = require('./scripts/migrate-add-coupon-excluded.js');
-    const migrateShippingExcluded = require('./scripts/migrate-add-shipping-excluded.js');
-    
-    await migrateDiscontinued();
-    await migrateCouponExcluded();
-    await migrateShippingExcluded();
-    console.log('✅ 數據庫遷移完成');
+      // 執行數據庫遷移
+  console.log('🔄 執行數據庫遷移...');
+  const migrateDiscontinued = require('./scripts/migrate-add-discontinued.js');
+  const migrateCouponExcluded = require('./scripts/migrate-add-coupon-excluded.js');
+  const migrateShippingExcluded = require('./scripts/migrate-add-shipping-excluded.js');
+  const migrateProductImages = require('./scripts/migrate-add-product-images.js');
+
+  await migrateDiscontinued();
+  await migrateCouponExcluded();
+  await migrateShippingExcluded();
+  await migrateProductImages();
+  console.log('✅ 數據庫遷移完成');
     
     // 檢查是否需要強制重設管理員
     if (process.env.FORCE_ADMIN_RESET === 'true') {
