@@ -53,7 +53,7 @@ const ProductImageManager: React.FC<ProductImageManagerProps> = ({
         const formData = new FormData();
         formData.append('image', file);
         
-        const response = await uploadImage(formData);
+        const response = await uploadImage(file);
         
         if (response.data.success) {
           newImages.push({

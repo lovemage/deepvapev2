@@ -13,6 +13,7 @@ import { useCartStore } from '@/lib/store';
 import { cartAPI, productsAPI } from '@/lib/api';
 import SEO, { createProductStructuredData, createBreadcrumbStructuredData } from '@/components/SEO';
 import OptimizedImage from '@/components/OptimizedImage';
+import ProductImageCarousel from '@/components/ProductImageCarousel';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
