@@ -50,9 +50,6 @@ const ProductImageManager: React.FC<ProductImageManagerProps> = ({
       
       for (const file of Array.from(files)) {
         // 上傳圖片
-        const formData = new FormData();
-        formData.append('image', file);
-        
         const response = await uploadImage(file);
         
         if (response.data.success) {

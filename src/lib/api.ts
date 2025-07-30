@@ -202,10 +202,13 @@ export const adminAPI = {
   
   getImagesInFolder: () => api.get('/admin/images/folder'),
   
-  uploadImage: (formData: FormData) => 
-    api.post('/admin/upload-image', formData, {
+  uploadImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post('/admin/upload-image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
-    }),
+    });
+  },
   
   deleteImage: (filename: string) => 
     api.delete(`/admin/images/${filename}`),
