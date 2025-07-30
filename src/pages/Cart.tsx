@@ -52,7 +52,7 @@ const Cart: React.FC = () => {
   };
 
   const loadCart = async () => {
-    if (!sessionId) return;
+    if (!sessionId) return null;
 
     try {
       setLoading(true);
@@ -74,8 +74,12 @@ const Cart: React.FC = () => {
       setTotalAmount(cartResponse.data.totalAmount);
       setItemCount(cartResponse.data.itemCount);
       setHasShippingExcludedItems(shippingResponse.data.hasShippingExcludedItems);
+      
+      // 返回最新的購物車數據
+      return cartResponse.data;
     } catch (error) {
       console.error('載入購物車失敗:', error);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -98,11 +102,11 @@ const Cart: React.FC = () => {
     try {
       console.log('正在更新商品數量，ID:', String(itemId), '新數量:', newQuantity);
       await cartAPI.updateCartItem(String(itemId), { quantity: newQuantity });
-      await loadCart();
+      const updatedCart = await loadCart();
 
-      // 如果有套用優惠券，重新驗證
-      if (appliedCoupon) {
-        await revalidateCoupon();
+      // 如果有套用優惠券，使用最新的總金額重新驗證
+      if (appliedCoupon && updatedCart) {
+        await revalidateCoupon(updatedCart.totalAmount);
       }
 
       toast({
@@ -135,11 +139,11 @@ const Cart: React.FC = () => {
     try {
       console.log('正在刪除商品，ID:', String(itemId));
       await cartAPI.removeCartItem(String(itemId));
-      await loadCart();
+      const updatedCart = await loadCart();
 
-      // 如果有套用優惠券，重新驗證
-      if (appliedCoupon) {
-        await revalidateCoupon();
+      // 如果有套用優惠券，使用最新的總金額重新驗證
+      if (appliedCoupon && updatedCart) {
+        await revalidateCoupon(updatedCart.totalAmount);
       }
 
       toast({
@@ -203,13 +207,16 @@ const Cart: React.FC = () => {
   };
 
   // 重新驗證優惠券
-  const revalidateCoupon = async () => {
+  const revalidateCoupon = async (amount?: number) => {
     if (!appliedCoupon || !sessionId) return;
+
+    // 使用傳入的金額或當前的總金額
+    const currentAmount = amount !== undefined ? amount : totalAmount;
 
     try {
       const response = await couponsAPI.validateCoupon({
         code: appliedCoupon.coupon.code,
-        amount: totalAmount,
+        amount: currentAmount,
         sessionId: sessionId
       });
       
