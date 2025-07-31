@@ -15,7 +15,10 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) => {
   const navigate = useNavigate();
-  const imageUrl = getImageUrl(product.image_url);
+  // 優先使用多圖片中的主圖，如果沒有則使用單圖片
+  const imageUrl = product.images && product.images.length > 0 
+    ? getImageUrl(product.images[0].image_url)
+    : getImageUrl(product.image_url);
   const { settings } = useSettingsStore();
   const stockStatus = getStockStatus(product.stock);
 

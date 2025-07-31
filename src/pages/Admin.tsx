@@ -710,13 +710,6 @@ const AdminPage: React.FC = () => {
         maxImages={3}
       />
       
-      {/* 保留傳統圖片URL輸入框作為備用 */}
-      <div className="space-y-2">
-        <Label className="text-sm text-gray-600">或者使用圖片 URL (備用選項)</Label>
-        <Input placeholder="圖片 URL" value={productForm.image_url || ''} onChange={e => setProductForm({...productForm, image_url: e.target.value})} />
-        <p className="text-xs text-gray-500">如果上方沒有上傳圖片，將使用此URL作為圖片</p>
-      </div>
-      
       <Textarea placeholder="描述" value={productForm.description || ''} onChange={e => setProductForm({...productForm, description: e.target.value})} />
 
       {/* 停賣狀態 */}

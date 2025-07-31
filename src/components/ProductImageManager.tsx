@@ -1,18 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Upload, 
   X, 
   MoveVertical, 
   Image as ImageIcon,
-  Star
+  Star,
+  Plus,
+  Link
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { uploadImage } from '@/lib/api';
 
 interface ProductImageManagerProps {
   images: Array<{ url: string; file?: File }>;
@@ -26,55 +26,44 @@ const ProductImageManager: React.FC<ProductImageManagerProps> = ({
   maxImages = 3
 }) => {
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState('');
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    if (images.length + files.length > maxImages) {
+  const handleAddImage = () => {
+    if (!newImageUrl.trim()) {
       toast({
-        title: '圖片數量限制',
-        description: `每個產品最多只能上傳 ${maxImages} 張圖片`,
+        title: '請輸入圖片URL',
+        description: '請輸入有效的圖片URL',
         variant: 'destructive'
       });
       return;
     }
 
-    setUploading(true);
-
-    try {
-      const newImages = [...images];
-      
-      for (const file of Array.from(files)) {
-        // 上傳圖片
-        const response = await uploadImage(file);
-        
-        if (response.success) {
-          newImages.push({
-            url: response.filePath,
-            file
-          });
-        }
-      }
-
-      onImagesChange(newImages);
-      toast({ title: '圖片上傳成功！' });
-    } catch (error: any) {
-      console.error('圖片上傳失敗:', error);
+    if (images.length >= maxImages) {
       toast({
-        title: '上傳失敗',
-        description: error.response?.data?.message || '圖片上傳時發生錯誤',
+        title: '圖片數量限制',
+        description: `每個產品最多只能添加 ${maxImages} 張圖片`,
         variant: 'destructive'
       });
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      return;
     }
+
+    // 驗證URL格式
+    try {
+      new URL(newImageUrl);
+    } catch {
+      toast({
+        title: '無效的URL格式',
+        description: '請輸入有效的圖片URL',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const newImages = [...images, { url: newImageUrl.trim() }];
+    onImagesChange(newImages);
+    setNewImageUrl('');
+    toast({ title: '圖片添加成功！' });
   };
 
   const handleRemoveImage = (index: number) => {
@@ -117,6 +106,13 @@ const ProductImageManager: React.FC<ProductImageManagerProps> = ({
     onImagesChange(newImages);
   };
 
+  const getImageLabel = (index: number) => {
+    if (index === 0) return '卡片主圖-原始';
+    if (index === 1) return '產品詳細頁1';
+    if (index === 2) return '產品詳細頁2';
+    return `圖片 ${index + 1}`;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -124,139 +120,121 @@ const ProductImageManager: React.FC<ProductImageManagerProps> = ({
           產品圖片 ({images.length}/{maxImages})
         </Label>
         {images.length < maxImages && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? (
-              <>
-                <div className="animate-spin mr-2 h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full" />
-                上傳中...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
-                添加圖片
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="輸入圖片URL"
+              value={newImageUrl}
+              onChange={(e) => setNewImageUrl(e.target.value)}
+              className="w-64"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddImage();
+                }
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddImage}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              添加
+            </Button>
+          </div>
         )}
       </div>
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleImageUpload}
-        accept="image/*"
-        multiple
-        className="hidden"
-      />
-
-      {images.length === 0 ? (
-        <Card className="border-dashed border-2 border-gray-200">
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <ImageIcon className="h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-sm text-gray-500 text-center mb-4">
-              還沒有上傳圖片<br />
-              點擊「添加圖片」按鈕開始上傳
-            </p>
-            <p className="text-xs text-gray-400 text-center">
-              最多可上傳 {maxImages} 張圖片<br />
-              第一張圖片將作為主圖顯示
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {images.map((image, index) => (
-            <Card
-              key={index}
-              className="relative group cursor-move"
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-            >
-              <CardContent className="p-2">
-                <div className="relative aspect-square bg-gray-100 rounded-md overflow-hidden">
+      {/* 圖片預覽列表 */}
+      <div className="space-y-3">
+        {images.map((image, index) => (
+          <Card
+            key={index}
+            className="group relative"
+            draggable
+            onDragStart={() => handleDragStart(index)}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, index)}
+          >
+            <CardContent className="p-3">
+              <div className="flex items-center gap-3">
+                {/* 圖片預覽 */}
+                <div className="relative w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                   <img
                     src={image.url}
                     alt={`產品圖片 ${index + 1}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/images/placeholder.png';
+                    }}
                   />
                   
                   {/* 主圖標記 */}
                   {index === 0 && (
-                    <Badge className="absolute top-2 left-2 bg-yellow-500 hover:bg-yellow-600">
-                      <Star className="h-3 w-3 mr-1" />
+                    <Badge className="absolute top-1 left-1 bg-yellow-500 hover:bg-yellow-600 text-xs">
+                      <Star className="h-2 w-2 mr-1" />
                       主圖
                     </Badge>
                   )}
+                </div>
+
+                {/* 圖片信息 */}
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm">{getImageLabel(index)}</div>
+                  <div className="text-xs text-gray-500 truncate">{image.url}</div>
+                </div>
+
+                {/* 操作按鈕 */}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* 排序按鈕 */}
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => moveImage(index, index - 1)}
+                      disabled={index === 0}
+                    >
+                      <MoveVertical className="h-3 w-3" />
+                    </Button>
+                  </div>
 
                   {/* 刪除按鈕 */}
                   <Button
                     type="button"
                     variant="destructive"
                     size="sm"
-                    className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-6 w-6 p-0"
                     onClick={() => handleRemoveImage(index)}
                   >
                     <X className="h-4 w-4" />
                   </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-                  {/* 排序按鈕 */}
-                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="flex gap-1">
-                      {index > 0 && (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => moveImage(index, index - 1)}
-                        >
-                          ←
-                        </Button>
-                      )}
-                      {index < images.length - 1 && (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => moveImage(index, index + 1)}
-                        >
-                          →
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-2 text-center">
-                  <p className="text-xs text-gray-500">圖片 {index + 1}</p>
-                  {index === 0 && (
-                    <p className="text-xs text-yellow-600">主要展示圖片</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      {/* 提示信息 */}
+      {images.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          <Link className="mx-auto h-12 w-12 text-gray-300 mb-2" />
+          <p className="text-sm">尚未添加任何圖片</p>
+          <p className="text-xs text-gray-400 mt-1">請輸入圖片URL來添加產品圖片</p>
         </div>
       )}
 
-      {images.length > 0 && (
-        <div className="bg-blue-50 p-3 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>提示：</strong> 
-            第一張圖片為主圖，將在產品列表和詳情頁優先顯示。
-            可以拖拽圖片或使用箭頭按鈕調整順序。
-          </p>
-        </div>
-      )}
+      {/* 圖片說明 */}
+      <div className="text-xs text-gray-500 space-y-1">
+        <p><strong>圖片說明：</strong></p>
+        <p>• 卡片主圖-原始：產品卡片顯示的主圖</p>
+        <p>• 產品詳細頁1：產品詳情頁面的第一張圖片</p>
+        <p>• 產品詳細頁2：產品詳情頁面的第二張圖片</p>
+      </div>
     </div>
   );
 };
