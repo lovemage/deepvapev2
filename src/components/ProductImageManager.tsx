@@ -48,19 +48,40 @@ const ProductImageManager: React.FC<ProductImageManagerProps> = ({
       return;
     }
 
-    // 驗證URL格式
-    try {
-      new URL(newImageUrl);
-    } catch {
-      toast({
-        title: '無效的URL格式',
-        description: '請輸入有效的圖片URL',
-        variant: 'destructive'
-      });
-      return;
+    // 驗證URL格式 - 支持相對路徑和包含空格的URL
+    const trimmedUrl = newImageUrl.trim();
+    
+    // 如果是相對路徑（以/開頭），直接接受
+    if (trimmedUrl.startsWith('/')) {
+      // 檢查是否包含有效的圖片擴展名
+      const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+      const hasValidExtension = validExtensions.some(ext => 
+        trimmedUrl.toLowerCase().includes(ext)
+      );
+      
+      if (!hasValidExtension) {
+        toast({
+          title: '無效的圖片格式',
+          description: '請輸入有效的圖片URL（支持jpg, jpeg, png, gif, webp, svg）',
+          variant: 'destructive'
+        });
+        return;
+      }
+    } else {
+      // 如果是完整URL，驗證格式
+      try {
+        new URL(trimmedUrl);
+      } catch {
+        toast({
+          title: '無效的URL格式',
+          description: '請輸入有效的圖片URL或相對路徑',
+          variant: 'destructive'
+        });
+        return;
+      }
     }
 
-    const newImages = [...images, { url: newImageUrl.trim() }];
+    const newImages = [...images, { url: trimmedUrl }];
     onImagesChange(newImages);
     setNewImageUrl('');
     toast({ title: '圖片添加成功！' });
