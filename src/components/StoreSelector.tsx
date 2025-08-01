@@ -130,17 +130,30 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Button
-              onClick={openECPayMap}
-              variant="outline"
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white border-green-600"
-            >
-              <MapPin className="h-4 w-4 mr-2" />
-              <span className="text-sm">選擇 7-11 門市</span>
-              <span className="text-xs ml-1">(beta)</span>
-              <ExternalLink className="h-3 w-3 ml-1" />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={openECPayMap}
+                variant="outline"
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                <span className="text-sm">選擇 7-11 門市</span>
+                <span className="text-xs ml-1">(beta)</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Button>
+              
+              <Button
+                onClick={() => window.open('https://emap.pcsc.com.tw/ecmap/default.aspx', '_blank')}
+                variant="outline"
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+              >
+                <Store className="h-4 w-4 mr-2" />
+                <span className="text-sm">搜尋 7-11 門市</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Button>
+            </div>
             
             <div className="text-xs text-gray-500">
               或手動填寫下方資訊
@@ -148,7 +161,8 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
           </div>
           
           <div className="text-xs text-gray-500 text-center">
-            點擊按鈕將開啟 7-11 官方門市地圖進行選擇
+            <p>綠色按鈕：開啟綠界物流地圖進行門市選擇 (beta)</p>
+            <p>藍色按鈕：開啟 7-11 官方門市查詢系統</p>
           </div>
         </div>
       )}
