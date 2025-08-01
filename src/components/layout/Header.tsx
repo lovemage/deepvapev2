@@ -45,8 +45,11 @@ const Header: React.FC = () => {
 
   const navigationItems = [
     { label: '首頁', path: '/' },
-    { label: '配送說明', path: '/shipping' },
-    { label: '退換貨政策', path: '/returns' },
+    { 
+      label: 'Line客服', 
+      path: 'javascript:void(0)', 
+      onClick: () => window.open('https://line.me/ti/p/@deepvape', '_blank') 
+    },
   ];
 
   const productCategories = [
@@ -165,13 +168,23 @@ const Header: React.FC = () => {
               </div>
             </div>
             {navigationItems.slice(1).map((item) => (
-              <Link 
-                key={item.path}
-                to={item.path} 
-                className="text-sm font-medium hover:text-primary transition-colors"
-              >
-                {item.label}
-              </Link>
+              item.onClick ? (
+                <button
+                  key={item.path}
+                  onClick={item.onClick}
+                  className="text-sm font-medium hover:text-primary transition-colors"
+                >
+                  {item.label}
+                </button>
+              ) : (
+                <Link 
+                  key={item.path}
+                  to={item.path} 
+                  className="text-sm font-medium hover:text-primary transition-colors"
+                >
+                  {item.label}
+                </Link>
+              )
             ))}
           </nav>
 
@@ -255,14 +268,27 @@ const Header: React.FC = () => {
             </Accordion>
             
             {navigationItems.slice(1).map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="block py-2 px-3 text-base font-medium hover:bg-gray-100 rounded-md transition-colors"
-                onClick={closeMobileMenu}
-              >
-                {item.label}
-              </Link>
+              item.onClick ? (
+                <button
+                  key={item.path}
+                  onClick={() => {
+                    item.onClick?.();
+                    closeMobileMenu();
+                  }}
+                  className="block py-2 px-3 text-base font-medium hover:bg-gray-100 rounded-md transition-colors w-full text-left"
+                >
+                  {item.label}
+                </button>
+              ) : (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="block py-2 px-3 text-base font-medium hover:bg-gray-100 rounded-md transition-colors"
+                  onClick={closeMobileMenu}
+                >
+                  {item.label}
+                </Link>
+              )
             ))}
           </div>
         </nav>

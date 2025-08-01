@@ -308,15 +308,51 @@ const Products: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <SEO
-        title={seoContent.title}
-        description={seoContent.description}
-        keywords={seoContent.keywords}
-        url={`/products${selectedCategory ? `?category=${selectedCategory}` : ''}${selectedBrand ? `${selectedCategory ? '&' : '?'}brand=${selectedBrand}` : ''}`}
-        structuredData={createBreadcrumbStructuredData(breadcrumbs)}
-      />
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+    <>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .pagination-container {
+            position: relative;
+            z-index: 10;
+          }
+          .pagination-btn {
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            z-index: 10;
+          }
+          .pagination-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          }
+          .pagination-btn:disabled {
+            pointer-events: none;
+            opacity: 0.5;
+          }
+          .pagination-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+          }
+          @media (min-width: 768px) {
+            .pagination-container {
+              padding: 1rem;
+              margin: 0 auto;
+            }
+            .pagination-btn {
+              min-width: 44px;
+              min-height: 44px;
+            }
+          }
+        `
+      }} />
+      <div className="container mx-auto px-4 py-6">
+        <SEO
+          title={seoContent.title}
+          description={seoContent.description}
+          keywords={seoContent.keywords}
+          url={`/products${selectedCategory ? `?category=${selectedCategory}` : ''}${selectedBrand ? `${selectedCategory ? '&' : '?'}brand=${selectedBrand}` : ''}`}
+          structuredData={createBreadcrumbStructuredData(breadcrumbs)}
+        />
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">商品列表</h1>
           <p className="text-gray-600">
@@ -468,23 +504,12 @@ const Products: React.FC = () => {
 
               {totalPages > 1 && (
                 <div className="flex justify-center mt-12">
-                  <div 
-                    className="flex space-x-2 p-4" 
-                    style={{ 
-                      zIndex: 10, 
-                      position: 'relative',
-                      pointerEvents: 'auto'
-                    }}
-                  >
+                  <div className="flex space-x-2 pagination-container">
                     <Button
                       variant="outline"
                       disabled={currentPage === 1}
                       onClick={() => handlePageChange(currentPage - 1)}
-                      style={{ 
-                        minWidth: '80px', 
-                        minHeight: '40px',
-                        pointerEvents: currentPage === 1 ? 'none' : 'auto'
-                      }}
+                      className="pagination-btn"
                     >
                       上一頁
                     </Button>
@@ -501,11 +526,7 @@ const Products: React.FC = () => {
                             key={page}
                             variant={currentPage === page ? 'default' : 'outline'}
                             onClick={() => handlePageChange(page)}
-                            style={{ 
-                              minWidth: '40px', 
-                              minHeight: '40px',
-                              pointerEvents: 'auto'
-                            }}
+                            className="pagination-btn"
                           >
                             {page}
                           </Button>
@@ -523,11 +544,7 @@ const Products: React.FC = () => {
                       variant="outline"
                       disabled={currentPage === totalPages}
                       onClick={() => handlePageChange(currentPage + 1)}
-                      style={{ 
-                        minWidth: '80px', 
-                        minHeight: '40px',
-                        pointerEvents: currentPage === totalPages ? 'none' : 'auto'
-                      }}
+                      className="pagination-btn"
                     >
                       下一頁
                     </Button>
@@ -538,7 +555,7 @@ const Products: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
