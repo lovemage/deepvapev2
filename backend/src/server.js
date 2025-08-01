@@ -15,6 +15,7 @@ const adminRouter = require('./routes/admin');
 const settingsRouter = require('./routes/settings');
 const ordersRouter = require('./routes/orders');
 const sitemapRouter = require('./routes/sitemap');
+const storesRouter = require('./routes/stores');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -90,6 +91,7 @@ app.use('/api/announcements', announcementsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/stores', storesRouter);
 app.use('/api', sitemapRouter);
 app.use('/api/ecpay', require('./routes/ecpay-callback'));
 
