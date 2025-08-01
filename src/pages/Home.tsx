@@ -248,25 +248,26 @@ const Home: React.FC = () => {
             <div className="relative overflow-hidden">
               <style dangerouslySetInnerHTML={{
                 __html: `
-                  @keyframes slideGradient {
+                  @keyframes fadeSlideLeftToRight {
                     0% {
-                      background: linear-gradient(90deg, rgba(139, 69, 19, 0.1) 0%, rgba(255, 215, 0, 0.3) 50%, rgba(139, 69, 19, 0.1) 100%);
-                      background-size: 200% 100%;
-                      background-position: -100% 0;
+                      opacity: 0.3;
+                      transform: translateX(-50px);
                     }
-                    50% {
-                      background: linear-gradient(90deg, rgba(139, 69, 19, 0.1) 0%, rgba(255, 215, 0, 0.3) 50%, rgba(139, 69, 19, 0.1) 100%);
-                      background-size: 200% 100%;
-                      background-position: 100% 0;
+                    25% {
+                      opacity: 1;
+                      transform: translateX(0);
+                    }
+                    75% {
+                      opacity: 1;
+                      transform: translateX(0);
                     }
                     100% {
-                      background: linear-gradient(90deg, rgba(139, 69, 19, 0.1) 0%, rgba(255, 215, 0, 0.3) 50%, rgba(139, 69, 19, 0.1) 100%);
-                      background-size: 200% 100%;
-                      background-position: -100% 0;
+                      opacity: 0.3;
+                      transform: translateX(50px);
                     }
                   }
-                  .product-gradient-animation {
-                    animation: slideGradient 8s infinite linear;
+                  .product-fade-slide-animation {
+                    animation: fadeSlideLeftToRight 4s infinite ease-in-out;
                     border-radius: 8px;
                   }
                 `
@@ -275,9 +276,9 @@ const Home: React.FC = () => {
                 {featuredProducts.map((product, index) => (
                   <div 
                     key={product.id} 
-                    className={`w-48 flex-shrink-0 transform transition-all duration-1000 ease-in-out product-gradient-animation`}
+                    className={`w-48 flex-shrink-0 transform transition-all duration-1000 ease-in-out product-fade-slide-animation`}
                     style={{
-                      animationDelay: `${index * 0.2}s`
+                      animationDelay: `${index * 0.3}s`
                     }}
                   >
                     <ProductCard product={product} />
