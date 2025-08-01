@@ -15,7 +15,7 @@ export const siteConfig = {
   // 社交媒體
   social: {
     line: '@deepvape',
-    email: 'service@deepvape.com'
+    email: 'angel857168@gmail.com'
   },
   
   // 圖片配置
@@ -25,7 +25,7 @@ export const siteConfig = {
   // 聯繫信息
   contact: {
     line: '@deepvape',
-    email: 'service@deepvape.com',
+    email: 'angel857168@gmail.com',
     hours: '週一至週五 10:00-18:00'
   }
 };

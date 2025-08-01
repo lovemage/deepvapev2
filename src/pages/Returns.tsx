@@ -257,7 +257,8 @@ const Returns: React.FC = () => {
                     <MessageCircle className="h-6 w-6 text-purple-600" />
                   </div>
                   <h3 className="font-semibold text-blue-800">Email</h3>
-                  <p className="text-blue-700">service@deepvape.com</p>
+<p className="text-sm text-gray-600">angel857168@gmail.com</p>
+                                      <p className="text-blue-700">angel857168@gmail.com</p>
                 </div>
                 <div className="space-y-2">
                   <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">

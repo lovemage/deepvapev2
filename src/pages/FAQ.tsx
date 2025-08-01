@@ -90,7 +90,7 @@ const FAQ: React.FC = () => {
             </p>
             <div className="space-y-2">
               <p className="text-sm">
-                <strong>客服信箱：</strong> support@deepvape.org
+                <strong>客服信箱：</strong> angel857168@gmail.com
               </p>
               <p className="text-sm">
                 <strong>服務時間：</strong> 週一至週五 9:00-18:00
