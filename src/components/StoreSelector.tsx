@@ -144,7 +144,7 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
               </Button>
               
               <Button
-                onClick={() => window.open('https://emap.pcsc.com.tw/ecmap/default.aspx', '_blank')}
+                onClick={() => window.open('https://emap.pcsc.com.tw/#', '_blank')}
                 variant="outline"
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
