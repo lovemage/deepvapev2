@@ -275,10 +275,7 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
                 <ExternalLink className="h-3 w-3 ml-1" />
               </Button>
             </div>
-            
-            <div className="text-xs text-gray-500">
-              或手動填寫下方資訊
-            </div>
+
           </div>
           
           <div className="text-xs text-gray-500 text-center">
