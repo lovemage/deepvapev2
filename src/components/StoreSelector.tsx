@@ -8,9 +8,10 @@ interface StoreSelectorProps {
   onStoreSelect: (store: any) => void;
   selectedStore?: any;
   required?: boolean;
+  onManualInput?: (field: string, value: string) => void;
 }
 
-const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedStore, required = false }) => {
+const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedStore, required = false, onManualInput }) => {
   const { toast } = useToast();
   
   // 檢查 URL 參數是否有門市資訊（從綠界回調返回）
@@ -124,19 +125,27 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
           </div>
         </Card>
       ) : (
-        <div className="space-y-3">
-          <Button
-            onClick={openECPayMap}
-            variant="outline"
-            className="w-full h-auto py-4 justify-center bg-green-600 hover:bg-green-700 text-white border-green-600"
-          >
-            <MapPin className="h-5 w-5 mr-2" />
-            <span className="font-medium">選擇 7-11 門市</span>
-            <ExternalLink className="h-4 w-4 ml-2" />
-          </Button>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Button
+              onClick={openECPayMap}
+              variant="outline"
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+              <span className="text-sm">選擇 7-11 門市</span>
+              <span className="text-xs ml-1">(beta)</span>
+              <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
+            
+            <div className="text-xs text-gray-500">
+              或手動填寫下方資訊
+            </div>
+          </div>
           
           <div className="text-xs text-gray-500 text-center">
-            點擊上方按鈕將開啟 7-11 官方門市地圖進行選擇
+            點擊按鈕將開啟 7-11 官方門市地圖進行選擇
           </div>
         </div>
       )}

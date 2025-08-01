@@ -115,10 +115,14 @@ const Checkout: React.FC = () => {
       return;
     }
 
-    if (!customerInfo.storeNumber && !customerInfo.storeName) {
+    // 檢查門市資訊：必須通過地圖選擇或手動填寫
+    const hasStoreFromMap = customerInfo.storeNumber && customerInfo.storeName && customerInfo.storeAddress;
+    const hasManualStore = customerInfo.storeNumber || customerInfo.storeName;
+    
+    if (!hasStoreFromMap && !hasManualStore) {
       toast({
         title: "請填寫取貨門市",
-        description: "請填寫取件店號或取件店名",
+        description: "請使用門市選擇器或手動填寫門市資訊",
         variant: "destructive",
       });
       return;
@@ -325,7 +329,47 @@ const Checkout: React.FC = () => {
                         } : undefined
                       }
                       required={true}
+                      onManualInput={(field, value) => {
+                        handleInputChange(field as keyof CustomerInfo, value);
+                      }}
                     />
+
+                    {/* 手動填寫門市資訊 */}
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                        手動填寫門市資訊（二選一）
+                      </h4>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <Label htmlFor="manualStoreNumber" className="text-sm">
+                            取件店號
+                          </Label>
+                          <Input
+                            id="manualStoreNumber"
+                            value={customerInfo.storeNumber}
+                            onChange={(e) => handleInputChange('storeNumber', e.target.value)}
+                            placeholder="例如：7111874"
+                            className="text-sm"
+                          />
+                        </div>
+
+                        <div className="text-center text-gray-400 text-xs">或</div>
+
+                        <div>
+                          <Label htmlFor="manualStoreName" className="text-sm">
+                            取件店名
+                          </Label>
+                          <Input
+                            id="manualStoreName"
+                            value={customerInfo.storeName}
+                            onChange={(e) => handleInputChange('storeName', e.target.value)}
+                            placeholder="例如：7-ELEVEN 波卡門市3店"
+                            className="text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
