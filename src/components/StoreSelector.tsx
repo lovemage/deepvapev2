@@ -54,7 +54,7 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
     const serverReplyURL = `${apiUrl}/api/ecpay/callback`;
     
     const params = {
-      MerchantID: "2000132", // 綠界測試商店代號
+      MerchantID: import.meta.env.VITE_ECPAY_MERCHANT_ID || "2000132", // 綠界商店代號
       LogisticsType: "CVS",
       LogisticsSubType: "UNIMARTC2C", // 7-11 C2C
       IsCollection: "N",
@@ -62,6 +62,9 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
       ExtraData: "",
       Device: 0, // 0:PC, 1:Mobile
       MerchantTradeNo: merchantTradeNo,
+      // 綠界加密參數
+      HashKey: import.meta.env.VITE_ECPAY_HASH_KEY || "m8rtvx8U15iaMv2m",
+      HashIV: import.meta.env.VITE_ECPAY_HASH_IV || "jovPWG9NuT0lArNc",
     };
 
     // 建立查詢字串
