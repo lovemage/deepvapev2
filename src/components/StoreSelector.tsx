@@ -73,9 +73,10 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
     setIsLoading(true);
     
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      // 使用動態API URL，與api.ts保持一致
+      const apiBaseUrl = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api';
       const response = await fetch(
-        `${apiUrl}/api/stores/search?query=${encodeURIComponent(searchQuery)}&type=${searchType}&limit=10`
+        `${apiBaseUrl}/stores/search?query=${encodeURIComponent(searchQuery)}&type=${searchType}&limit=10`
       );
       
       if (!response.ok) {
@@ -129,8 +130,8 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
     const merchantTradeNo = "DS" + Date.now(); // 唯一訂單編號
     
     // 設定回調 URL
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const serverReplyURL = `${apiUrl}/api/ecpay/callback`;
+    const apiBaseUrl = import.meta.env.PROD ? 'https://deepvape.org/api' : 'http://localhost:3001/api';
+    const serverReplyURL = `${apiBaseUrl}/ecpay/callback`;
     
     const params = {
       MerchantID: import.meta.env.VITE_ECPAY_MERCHANT_ID || "2000132", // 綠界商店代號

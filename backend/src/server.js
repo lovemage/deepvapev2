@@ -24,7 +24,11 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // CORS 設置
 const corsOptions = {
   origin: NODE_ENV === 'production' 
-    ? [process.env.FRONTEND_URL || 'https://your-domain.railway.app']
+    ? [
+        process.env.FRONTEND_URL || 'https://your-domain.railway.app',
+        'https://deepvape.org',
+        'https://www.deepvape.org'
+      ]
     : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
