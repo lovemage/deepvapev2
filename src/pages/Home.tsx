@@ -245,45 +245,55 @@ const Home: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="relative overflow-hidden">
+            <div className="relative overflow-hidden h-80 flex items-center">
               <style dangerouslySetInnerHTML={{
                 __html: `
-                  @keyframes fadeSlideLeftToRight {
+                  @keyframes marqueeScroll {
                     0% {
-                      opacity: 0.3;
-                      transform: translateX(-50px);
-                    }
-                    25% {
-                      opacity: 1;
-                      transform: translateX(0);
-                    }
-                    75% {
-                      opacity: 1;
                       transform: translateX(0);
                     }
                     100% {
-                      opacity: 0.3;
-                      transform: translateX(50px);
+                      transform: translateX(-100%);
                     }
                   }
-                  .product-fade-slide-animation {
-                    animation: fadeSlideLeftToRight 4s infinite ease-in-out;
-                    border-radius: 8px;
+                  .marquee-wrapper {
+                    display: flex;
+                    width: 200%;
+                    animation: marqueeScroll 10s infinite linear;
+                  }
+                  .marquee-set {
+                    display: flex;
+                    gap: 1.5rem;
+                    width: 50%;
+                    justify-content: space-around;
+                  }
+                  .marquee-item {
+                    flex-shrink: 0;
+                    width: 12rem;
                   }
                 `
               }} />
-              <div className="flex gap-6 justify-center">
-                {featuredProducts.map((product, index) => (
-                  <div 
-                    key={product.id} 
-                    className={`w-48 flex-shrink-0 transform transition-all duration-1000 ease-in-out product-fade-slide-animation`}
-                    style={{
-                      animationDelay: `${index * 0.3}s`
-                    }}
-                  >
-                    <ProductCard product={product} />
-                  </div>
-                ))}
+              <div className="marquee-wrapper">
+                <div className="marquee-set">
+                  {featuredProducts.map((product) => (
+                    <div 
+                      key={product.id} 
+                      className="marquee-item"
+                    >
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
+                <div className="marquee-set">
+                  {featuredProducts.map((product) => (
+                    <div 
+                      key={`${product.id}-clone`} 
+                      className="marquee-item"
+                    >
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
