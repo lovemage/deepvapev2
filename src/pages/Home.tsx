@@ -105,15 +105,18 @@ const Home: React.FC = () => {
   const loadFeaturedProducts = async () => {
     try {
       setLoading(true);
-      // 獲取每個分類的推薦產品
+      // 獲取所有分類的產品，然後隨機選取5個
       const categories = ['host', 'cartridge', 'disposable', 'oil'];
       const promises = categories.map(category =>
-        productsAPI.getProducts({ category, limit: 4 })
+        productsAPI.getProducts({ category, limit: 10 })
       );
       
       const results = await Promise.all(promises);
       const allProducts = results.flatMap(result => result.data.products);
-      setFeaturedProducts(allProducts);
+      
+      // 隨機排序並選取5個產品
+      const shuffled = allProducts.sort(() => Math.random() - 0.5);
+      setFeaturedProducts(shuffled.slice(0, 5));
     } catch (error) {
       console.error('載入推薦產品失敗:', error);
     } finally {
@@ -229,9 +232,9 @@ const Home: React.FC = () => {
           )}
 
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {[...Array(8)].map((_, index) => (
-                <div key={index} className="animate-pulse">
+            <div className="flex gap-6 justify-center">
+              {[...Array(5)].map((_, index) => (
+                <div key={index} className="animate-pulse w-48 flex-shrink-0">
                   <div className="bg-gray-200 h-48 rounded-t-lg"></div>
                   <div className="p-4 space-y-3">
                     <div className="h-4 bg-gray-200 rounded"></div>
@@ -242,10 +245,45 @@ const Home: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {featuredProducts.slice(0, 8).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+            <div className="relative overflow-hidden">
+              <style dangerouslySetInnerHTML={{
+                __html: `
+                  @keyframes slideGradient {
+                    0% {
+                      background: linear-gradient(90deg, rgba(139, 69, 19, 0.1) 0%, rgba(255, 215, 0, 0.3) 50%, rgba(139, 69, 19, 0.1) 100%);
+                      background-size: 200% 100%;
+                      background-position: -100% 0;
+                    }
+                    50% {
+                      background: linear-gradient(90deg, rgba(139, 69, 19, 0.1) 0%, rgba(255, 215, 0, 0.3) 50%, rgba(139, 69, 19, 0.1) 100%);
+                      background-size: 200% 100%;
+                      background-position: 100% 0;
+                    }
+                    100% {
+                      background: linear-gradient(90deg, rgba(139, 69, 19, 0.1) 0%, rgba(255, 215, 0, 0.3) 50%, rgba(139, 69, 19, 0.1) 100%);
+                      background-size: 200% 100%;
+                      background-position: -100% 0;
+                    }
+                  }
+                  .product-gradient-animation {
+                    animation: slideGradient 8s infinite linear;
+                    border-radius: 8px;
+                  }
+                `
+              }} />
+              <div className="flex gap-6 justify-center">
+                {featuredProducts.map((product, index) => (
+                  <div 
+                    key={product.id} 
+                    className={`w-48 flex-shrink-0 transform transition-all duration-1000 ease-in-out product-gradient-animation`}
+                    style={{
+                      animationDelay: `${index * 0.2}s`
+                    }}
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
