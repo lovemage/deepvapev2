@@ -259,7 +259,7 @@ const Home: React.FC = () => {
                   .marquee-wrapper {
                     display: flex;
                     width: 200%;
-                    animation: marqueeScroll 10s infinite linear;
+                    animation: marqueeScroll 5s infinite linear;
                   }
                   .marquee-set {
                     display: flex;
