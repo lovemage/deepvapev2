@@ -11,6 +11,7 @@ import { useCartStore } from '@/lib/store';
 import { formatPrice } from '@/lib/utils';
 import { cartAPI, settingsAPI, ordersAPI } from '@/lib/api';
 import Captcha from '@/components/Captcha';
+import StoreSelector from '@/components/StoreSelector';
 
 interface CustomerInfo {
   name: string;
@@ -18,6 +19,7 @@ interface CustomerInfo {
   lineId: string;
   storeNumber: string;
   storeName: string;
+  storeAddress?: string;
 }
 
 const Checkout: React.FC = () => {
@@ -30,7 +32,8 @@ const Checkout: React.FC = () => {
     phone: '',
     lineId: '',
     storeNumber: '',
-    storeName: ''
+    storeName: '',
+    storeAddress: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -299,30 +302,30 @@ const Checkout: React.FC = () => {
                   <div className="space-y-4">
                     <h3 className="font-medium flex items-center">
                       <MapPin className="h-4 w-4 mr-2" />
-                      取貨門市資訊（二選一）
+                      <span className="text-red-500 mr-1">*</span>
+                      取貨門市
                     </h3>
                     
-                    <div>
-                      <Label htmlFor="storeNumber">取件店號</Label>
-                      <Input
-                        id="storeNumber"
-                        value={customerInfo.storeNumber}
-                        onChange={(e) => handleInputChange('storeNumber', e.target.value)}
-                        placeholder="例如：7111874"
-                      />
-                    </div>
-
-                    <div className="text-center text-gray-500">或</div>
-
-                    <div>
-                      <Label htmlFor="storeName">取件店名</Label>
-                      <Input
-                        id="storeName"
-                        value={customerInfo.storeName}
-                        onChange={(e) => handleInputChange('storeName', e.target.value)}
-                        placeholder="例如：7-ELEVEN 波卡門市3店"
-                      />
-                    </div>
+                    <StoreSelector
+                      onStoreSelect={(store) => {
+                        setCustomerInfo(prev => ({
+                          ...prev,
+                          storeNumber: store.storeNumber,
+                          storeName: store.storeName,
+                          storeAddress: store.address
+                        }));
+                      }}
+                      selectedStore={
+                        customerInfo.storeNumber ? {
+                          storeNumber: customerInfo.storeNumber,
+                          storeName: customerInfo.storeName,
+                          address: customerInfo.storeAddress || '',
+                          city: '',
+                          district: ''
+                        } : undefined
+                      }
+                      required={true}
+                    />
                   </div>
                 </div>
 
@@ -419,7 +422,8 @@ const Checkout: React.FC = () => {
                     }}
                   />
                   <div 
-                    className="w-12 h-8 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold hidden"
+                    className="w-12 h-8 bg-green-600 rounded items-center justify-center text-white text-xs font-bold hidden"
+                    style={{ display: 'none' }}
                   >
                     7-11
                   </div>
