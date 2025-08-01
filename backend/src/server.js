@@ -97,7 +97,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/stores', storesRouter);
 app.use('/api', sitemapRouter);
-app.use('/api/ecpay', require('./routes/ecpay-callback'));
+
 
 // robots.txt 路由
 app.get('/robots.txt', (req, res) => {

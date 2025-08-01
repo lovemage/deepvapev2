@@ -115,11 +115,11 @@ const Checkout: React.FC = () => {
       return;
     }
 
-    // 檢查門市資訊：必須通過地圖選擇或手動填寫
-    const hasStoreFromMap = customerInfo.storeNumber && customerInfo.storeName && customerInfo.storeAddress;
-    const hasManualStore = customerInfo.storeNumber || customerInfo.storeName;
+    // 檢查門市資訊：必須通過門市選擇器或手動填寫
+    const hasCompleteStoreInfo = customerInfo.storeNumber && customerInfo.storeName && customerInfo.storeAddress;
+    const hasBasicStoreInfo = customerInfo.storeNumber || customerInfo.storeName;
     
-    if (!hasStoreFromMap && !hasManualStore) {
+    if (!hasCompleteStoreInfo && !hasBasicStoreInfo) {
       toast({
         title: "請填寫取貨門市",
         description: "請使用門市選擇器或手動填寫門市資訊",

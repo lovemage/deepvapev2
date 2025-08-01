@@ -34,34 +34,7 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
   const [searchResults, setSearchResults] = useState<StoreData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  // 檢查 URL 參數是否有門市資訊（從綠界回調返回）
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const storeId = urlParams.get('CVSStoreID');
-    const storeName = urlParams.get('CVSStoreName');
-    const storeAddress = urlParams.get('CVSAddress');
-    const storeTel = urlParams.get('CVSTelephone');
-    
-    if (storeId && storeName && storeAddress) {
-      const store = {
-        storeNumber: storeId,
-        storeName: decodeURIComponent(storeName),
-        address: decodeURIComponent(storeAddress),
-        telNo: storeTel ? decodeURIComponent(storeTel) : '',
-      };
-      
-      onStoreSelect(store);
-      
-      // 清除 URL 參數
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-      
-      toast({
-        title: "門市選擇成功",
-        description: `已選擇 ${store.storeName}`,
-      });
-    }
-  }, [onStoreSelect, toast]);
+
 
   // 搜尋門市
   const searchStores = async () => {
@@ -123,47 +96,7 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
     });
   };
 
-  // 開啟綠界物流地圖
-  const openECPayMap = () => {
-    // 綠界物流地圖 API 參數
-    const ecpayMapUrl = "https://logistics.ecpay.com.tw/Express/map";
-    const merchantTradeNo = "DS" + Date.now(); // 唯一訂單編號
-    
-    // 設定回調 URL
-    const apiBaseUrl = import.meta.env.PROD ? 'https://deepvape.org/api' : 'http://localhost:3001/api';
-    const serverReplyURL = `${apiBaseUrl}/ecpay/callback`;
-    
-    const params = {
-      MerchantID: import.meta.env.VITE_ECPAY_MERCHANT_ID || "2000132", // 綠界商店代號
-      LogisticsType: "CVS",
-      LogisticsSubType: "UNIMARTC2C", // 7-11 C2C
-      IsCollection: "N",
-      ServerReplyURL: encodeURIComponent(serverReplyURL),
-      ExtraData: "",
-      Device: 0, // 0:PC, 1:Mobile
-      MerchantTradeNo: merchantTradeNo,
-      // 綠界加密參數
-      HashKey: import.meta.env.VITE_ECPAY_HASH_KEY || "m8rtvx8U15iaMv2m",
-      HashIV: import.meta.env.VITE_ECPAY_HASH_IV || "jovPWG9NuT0lArNc",
-    };
 
-    // 建立查詢字串
-    const queryString = Object.entries(params)
-      .map(([key, value]) => `${key}=${value}`)
-      .join('&');
-
-    // 開啟新視窗或跳轉
-    const mapUrl = `${ecpayMapUrl}?${queryString}`;
-    
-    // 儲存當前購物車狀態
-    const cartData = localStorage.getItem('cart-storage');
-    if (cartData) {
-      sessionStorage.setItem('temp-cart-backup', cartData);
-    }
-    
-    // 跳轉到綠界地圖
-    window.location.href = mapUrl;
-  };
 
   // 開啟Google地圖導航
   const openGoogleMaps = (lat: number, lng: number, address: string) => {
@@ -224,13 +157,7 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
               >
                 重新選擇門市
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={openECPayMap}
-              >
-                綠界地圖選擇
-              </Button>
+
             </div>
           </div>
         </Card>
@@ -246,7 +173,7 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
                     className="bg-green-600 hover:bg-green-700 text-white border-green-600"
                   >
                     <MapPin className="h-4 w-4 mr-2" />
-                    <span className="text-sm">本地搜尋門市</span>
+                    <span className="text-sm">7-11閃電搜尋</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
@@ -305,18 +232,8 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
                                   <h4 className="font-medium text-sm">{store.name}</h4>
                                   <p className="text-xs text-gray-600 mt-1">{store.address}</p>
                                   <p className="text-xs text-gray-500 mt-1">
-                                    門市代號: {store.id} | 電話: {store.tel}
+                                    門市代號: {store.id}
                                   </p>
-                                  <div className="flex flex-wrap gap-1 mt-2">
-                                    {store.service.slice(0, 5).map((service, index) => (
-                                      <span key={index} className="text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded">
-                                        {service}
-                                      </span>
-                                    ))}
-                                    {store.service.length > 5 && (
-                                      <span className="text-xs text-gray-500">+{store.service.length - 5} 更多服務</span>
-                                    )}
-                                  </div>
                                 </div>
                                 <div className="flex gap-1 ml-2">
                                   <Button
@@ -345,16 +262,7 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
                 </DialogContent>
               </Dialog>
               
-              <Button
-                onClick={openECPayMap}
-                variant="outline"
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-              >
-                <MapPin className="h-4 w-4 mr-2" />
-                <span className="text-sm">綠界地圖選擇</span>
-                <ExternalLink className="h-3 w-3 ml-1" />
-              </Button>
+
               
               <Button
                 onClick={() => window.open('https://emap.pcsc.com.tw/#', '_blank')}
@@ -374,8 +282,7 @@ const StoreSelector: React.FC<StoreSelectorProps> = ({ onStoreSelect, selectedSt
           </div>
           
           <div className="text-xs text-gray-500 text-center">
-            <p>綠色按鈕：本地搜尋門市 (推薦)</p>
-            <p>藍色按鈕：開啟綠界物流地圖進行門市選擇</p>
+            <p>綠色按鈕：7-11閃電搜尋 (推薦)</p>
             <p>橙色按鈕：開啟 7-11 官方門市查詢系統</p>
           </div>
         </div>

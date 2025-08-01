@@ -523,7 +523,7 @@ const processLargeFile = (filePath) => {
 
 - [GitHub台灣CVS地圖專案](https://github.com/Minato1123/taiwan-cvs-map.git)
 - [7-11官方門市查詢](https://emap.pcsc.com.tw/)
-- [綠界物流API文檔](https://www.ecpay.com.tw/Service/api_doc)
+
 - [Leaflet地圖庫](https://leafletjs.com/)
 
 ## 聯絡資訊
