@@ -349,7 +349,7 @@ const Privacy: React.FC = () => {
                   <Mail className="h-5 w-5 text-blue-600" />
                   <div>
                     <p className="font-medium">電子郵件</p>
-                    <p className="text-sm text-gray-600">privacy@deepvape.com</p>
+                    <p className="text-sm text-gray-600">service@deepvape.org</p>
                   </div>
                 </div>
                 
@@ -357,7 +357,7 @@ const Privacy: React.FC = () => {
                   <Phone className="h-5 w-5 text-green-600" />
                   <div>
                     <p className="font-medium">客服電話</p>
-                    <p className="text-sm text-gray-600">+853 2888-9999（澳門時間 09:00-21:00）</p>
+                    <p className="text-sm text-gray-600">+853 28486958（澳門時間 09:00-21:00）</p>
                   </div>
                 </div>
                 

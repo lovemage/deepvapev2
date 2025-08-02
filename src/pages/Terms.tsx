@@ -435,8 +435,8 @@ const Terms: React.FC = () => {
                   <p className="font-medium mb-2">聯絡資訊</p>
                   <div className="text-sm text-gray-600 space-y-1">
                     <p>總部地址：澳門特別行政區氹仔島海洋花園大馬路新濠天地商場</p>
-                    <p>客服郵箱：service@deepvape.com</p>
-                    <p>客服電話：+853 2888-9999</p>
+                    <p>客服郵箱：service@deepvape.org</p>
+                    <p>客服電話：+853 28486958</p>
                     <p>服務時間：週一至週日 09:00-21:00（澳門時間）</p>
                   </div>
                 </div>

@@ -112,7 +112,7 @@ const Footer: React.FC = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4" />
-                <span className="text-sm">+853 2888-9999</span>
+                <span className="text-sm">+853 28486958</span>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="h-4 w-4 flex items-center justify-center">
@@ -122,7 +122,7 @@ const Footer: React.FC = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4" />
-                <span className="text-sm">service@deepvape.com</span>
+                <span className="text-sm">service@deepvape.org</span>
               </div>
             </div>
             
