@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
             </div>
             <p className="text-sm text-gray-400">
               DeepVape 專業的電子煙線上商城，提供各種品牌的高品質電子煙產品。
-              我們致力於為顧客提供最好的購物體驗和優質的客戶服務。
+              我們致力於為港澳台地區顧客提供最好的購物體驗和優質的客戶服務。
             </p>
             <div className="flex space-x-4">
               <Facebook className="h-5 w-5 hover:text-blue-400 cursor-pointer transition-colors" />
@@ -99,6 +99,21 @@ const Footer: React.FC = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">聯絡資訊</h3>
             <div className="space-y-3">
+              <div className="flex items-start space-x-3">
+                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="text-white font-medium">澳門總部</p>
+                  <p className="text-gray-400">
+                    澳門特別行政區<br/>
+                    氹仔島海洋花園大馬路<br/>
+                    新濠天地商場
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Phone className="h-4 w-4" />
+                <span className="text-sm">+853 2888-9999</span>
+              </div>
               <div className="flex items-center space-x-3">
                 <div className="h-4 w-4 flex items-center justify-center">
                   <span className="text-green-400 font-bold text-xs">LINE</span>
@@ -107,7 +122,17 @@ const Footer: React.FC = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4" />
-                <span className="text-sm">angel857168@gmail.com</span>
+                <span className="text-sm">service@deepvape.com</span>
+              </div>
+            </div>
+            
+            {/* Service Area */}
+            <div className="mt-6">
+              <h4 className="text-sm font-semibold text-white mb-2">服務範圍</h4>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">香港</span>
+                <span className="px-2 py-1 bg-green-600 text-white text-xs rounded">澳門</span>
+                <span className="px-2 py-1 bg-red-600 text-white text-xs rounded">台灣</span>
               </div>
             </div>
             
@@ -115,7 +140,8 @@ const Footer: React.FC = () => {
             <div className="mt-6">
               <h4 className="text-sm font-semibold text-white mb-2">服務時間</h4>
               <p className="text-sm text-gray-400">
-                週一至週日（全年無休）
+                週一至週日 09:00-21:00<br/>
+                （澳門時間）
               </p>
             </div>
           </div>

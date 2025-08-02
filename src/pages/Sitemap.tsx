@@ -54,10 +54,26 @@ const Sitemap: React.FC = () => {
   const loadSitemapData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/sitemap-data');
-      if (!response.ok) {
-        throw new Error('Failed to load sitemap data');
+      // 優先從生產環境獲取真實數據
+      const productionApiUrl = 'https://deepvape.org/api/sitemap-data';
+      const fallbackApiUrl = '/api/sitemap-data';
+      
+      let response;
+      try {
+        // 嘗試從生產環境獲取數據
+        response = await fetch(productionApiUrl);
+        if (!response.ok) {
+          throw new Error('Production API failed');
+        }
+      } catch (prodError) {
+        console.log('使用本地API作為備選:', prodError.message);
+        // 如果生產環境失敗，使用本地API
+        response = await fetch(fallbackApiUrl);
+        if (!response.ok) {
+          throw new Error('Failed to load sitemap data from both sources');
+        }
       }
+      
       const data = await response.json();
       setSitemapData(data);
     } catch (error) {

@@ -21,6 +21,8 @@ const Shipping = lazy(() => import('@/pages/Shipping'));
 const Returns = lazy(() => import('@/pages/Returns'));
 const Sitemap = lazy(() => import('@/pages/Sitemap'));
 const FAQ = lazy(() => import('@/pages/FAQ'));
+const Privacy = lazy(() => import('@/pages/Privacy'));
+const Terms = lazy(() => import('@/pages/Terms'));
 
 // 載入中組件
 const PageLoader = () => (
@@ -81,6 +83,8 @@ function App() {
                 <Route path="/returns" element={<Returns />} />
                 <Route path="/sitemap" element={<Sitemap />} />
                 <Route path="/faq" element={<FAQ />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
               </Routes>
             </Suspense>
           </ErrorBoundary>
